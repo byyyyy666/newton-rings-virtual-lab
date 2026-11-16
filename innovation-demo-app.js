@@ -15,7 +15,7 @@
   const DEFAULT_CALIBRATION_RATIO = 0.48;
   const CALIBRATION_VERSION = 1;
   const DEMO_ROTATION_RATE = 12;
-  const DEMO_DATA_VERSION = 9;
+  const DEMO_DATA_VERSION = 10;
   const CANVAS_THEME = Object.freeze({
     surface: "#f7f9fa",
     surfaceMid: "#e3ebef",
@@ -199,12 +199,22 @@
         : Math.sqrt(4 * referenceR * (wavelengthNm * 1e-9) * order) * 1000;
       const jitter = Math.sin(index * 1.37 + 0.4) * 0.0028 * idealDiameter;
       const diameterMm = idealDiameter + jitter;
-      const leftMm = order === 0
+      let leftMm = order === 0
         ? centerReading
         : centerReading - diameterMm / 2 + Math.sin(index * 0.7) * 0.0015;
-      const rightMm = order === 0
+      let rightMm = order === 0
         ? centerReading
         : centerReading + diameterMm / 2 + Math.cos(index * 0.8) * 0.0015;
+      const captureIssues = new Map([
+        ["12:right", { shiftMm: -0.085, latencyMs: 286, flag: "encoder-reversal" }],
+        ["18:left", { shiftMm: 0.065, latencyMs: 54, flag: "encoder-reversal" }],
+        ["24:right", { shiftMm: -0.050, latencyMs: 18, flag: "encoder-reversal" }],
+        ["6:left", { shiftMm: 0, latencyMs: 312, flag: "latency-spike" }]
+      ]);
+      const leftIssue = captureIssues.get(`${order}:left`);
+      const rightIssue = captureIssues.get(`${order}:right`);
+      if (leftIssue) leftMm += leftIssue.shiftMm;
+      if (rightIssue) rightMm += rightIssue.shiftMm;
       const measuredDiameter = Math.abs(rightMm - leftMm);
       const capturedAt = new Date(started.getTime() + (index + 1) * 64000).toISOString();
       const confidence = 0.928 + Math.sin(index * 1.1) * 0.018;
@@ -218,6 +228,9 @@
           raw: Math.round((leftMm / DEFAULT_SETTINGS.pitchMm) * DEFAULT_SETTINGS.countsPerRev),
           angleDeg: ((leftMm / DEFAULT_SETTINGS.pitchMm) * 360) % 360,
           confidence,
+          latencyMs: leftIssue?.latencyMs ?? 18,
+          directionWarning: leftIssue?.flag === "encoder-reversal",
+          deviceFlag: leftIssue?.flag ?? null,
           capturedAt
         },
         right: {
@@ -228,6 +241,9 @@
           raw: Math.round((rightMm / DEFAULT_SETTINGS.pitchMm) * DEFAULT_SETTINGS.countsPerRev),
           angleDeg: ((rightMm / DEFAULT_SETTINGS.pitchMm) * 360) % 360,
           confidence,
+          latencyMs: rightIssue?.latencyMs ?? 18,
+          directionWarning: rightIssue?.flag === "encoder-reversal",
+          deviceFlag: rightIssue?.flag ?? null,
           capturedAt: new Date(Date.parse(capturedAt) + 18000).toISOString()
         },
         diameterMm: measuredDiameter,
@@ -246,6 +262,8 @@
     if (misread24) misread24.leftMm += 0.1800;
     const backlash12 = studentByOrder.get(12);
     if (backlash12) backlash12.rightMm -= 0.1100;
+    const backlash18 = studentByOrder.get(18);
+    if (backlash18) backlash18.leftMm += 0.0850;
     const missing8 = studentByOrder.get(8);
     if (missing8) missing8.rightMm = null;
     const events = [
@@ -269,6 +287,27 @@
         title: "目镜视野接入",
         detail: "1196 × 994 · 30 FPS 演示视频",
         at: new Date(started.getTime() + 12000).toISOString()
+      },
+      {
+        id: uid("event"),
+        type: "encoder",
+        title: "检测到编码器回转",
+        detail: "m=12 右侧测点前记录到鼓轮反向转动，读数可能包含螺纹空程",
+        at: new Date(started.getTime() + 13 * 64000).toISOString()
+      },
+      {
+        id: uid("event"),
+        type: "encoder",
+        title: "检测到编码器回转",
+        detail: "m=18 左侧测点前出现方向切换，建议越过目标后单向靠近复测",
+        at: new Date(started.getTime() + 19 * 64000).toISOString()
+      },
+      {
+        id: uid("event"),
+        type: "warning",
+        title: "编码器链路延迟尖峰",
+        detail: "m=6 左侧测点延迟达到 312 ms，画面与测点时间戳可能错位",
+        at: new Date(started.getTime() + 7 * 64000).toISOString()
       },
       ...pairs.map((pair, index) => ({
         id: uid("event"),
@@ -517,7 +556,10 @@
     },
       measurementMotion: {
         lastCapturePosition: null,
-        direction: 0
+        direction: 0,
+        lastCaptureAt: null,
+        lastRaw: null,
+        recentLatencies: []
       },
     visionTimer: null,
     lastPersistAt: 0
@@ -982,6 +1024,45 @@
         recommendations.push("按同一方向完成整组读数；需要返回时先越过目标位置再单向靠近，或重新开始本组测量。");
       }
 
+    const captureLatencies = state.session.captures
+      .map((capture) => numberOr(capture.latencyMs, null))
+      .filter(Number.isFinite);
+    let captureLatencySpikes = [];
+    if (captureLatencies.length >= 4) {
+      const sortedLatencies = captureLatencies.slice().sort((left, right) => left - right);
+      const medianLatency = sortedLatencies[Math.floor(sortedLatencies.length / 2)];
+      const latencyLimit = Math.max(180, medianLatency * 3);
+      const latencySpikes = state.session.captures.filter(
+        (capture) => numberOr(capture.latencyMs, 0) > latencyLimit
+      );
+      if (latencySpikes.length) {
+        captureLatencySpikes = latencySpikes;
+        const worst = latencySpikes.reduce((best, capture) =>
+          numberOr(capture.latencyMs, 0) > numberOr(best?.latencyMs, 0) ? capture : best
+        , null);
+        findings.push({
+          severity: "warn",
+          title: "检测到编码器链路延迟尖峰",
+          detail: `${latencySpikes.length} 个测点超过动态阈值 ${Math.round(latencyLimit)} ms，最大为 m=${worst?.order ?? "--"} ${worst?.side === "left" ? "左" : "右"}侧 ${Math.round(numberOr(worst?.latencyMs, 0))} ms。`
+        });
+        score -= Math.min(10, latencySpikes.length * 4);
+        recommendations.push("检查串口缓冲、ESP8266 网络和编码器采样周期；延迟尖峰对应的测点应重新采集。");
+      }
+    }
+
+    const encoderJumpWarnings = state.session.captures.filter(
+      (capture) => capture.encoderJumpWarning || capture.deviceFlag === "encoder-count-jump"
+    );
+    if (encoderJumpWarnings.length) {
+      findings.push({
+        severity: "warn",
+        title: "检测到编码器计数跳变",
+        detail: `${encoderJumpWarnings.length} 个测点在过短采样间隔内出现异常计数变化，可能由丢步、回转或通信重传造成。`
+      });
+      score -= Math.min(10, encoderJumpWarnings.length * 4);
+      recommendations.push("检查编码器信号线、供电和采样缓冲，并对计数跳变前后的测点重新采集。");
+    }
+
     if (encoderLatency > 250) {
       findings.push({
         severity: "warn",
@@ -990,7 +1071,7 @@
       });
       score -= 6;
       recommendations.push("检查串口波特率、WebSocket 网络和编码器采样频率，建议端到端延迟低于 100 ms。");
-    } else {
+    } else if (!captureLatencySpikes.length) {
       findings.push({
         severity: "good",
         title: "编码器链路延迟正常",
@@ -1088,6 +1169,11 @@
     if (!recommendations.length) {
       recommendations.push("保持现有操作方式，并在报告中保留原始计数、图像帧和测点时间戳。");
     }
+
+    const deviceIssuePattern = /反向测量|延迟尖峰|计数跳变|链路延迟/;
+    findings.sort((left, right) =>
+      Number(!deviceIssuePattern.test(left.title)) - Number(!deviceIssuePattern.test(right.title))
+    );
 
     return {
       fit,
@@ -3147,6 +3233,39 @@
       snapshot: createSnapshot(320, 180, `m=${order} ${side === "left" ? "左" : "右"}侧`)
     };
       const motion = state.measurementMotion;
+      const capturedAtMs = Date.parse(capturedAt);
+      const recentSortedLatencies = motion.recentLatencies
+        .slice()
+        .sort((left, right) => left - right);
+      const medianRecentLatency = recentSortedLatencies.length
+        ? recentSortedLatencies[Math.floor(recentSortedLatencies.length / 2)]
+        : 18;
+      measurement.latencySpike = Number.isFinite(measurement.latencyMs)
+        && measurement.latencyMs > Math.max(180, medianRecentLatency * 3);
+      const captureGapSeconds = Number.isFinite(motion.lastCaptureAt)
+        ? (capturedAtMs - motion.lastCaptureAt) / 1000
+        : null;
+      const rawDelta = Number.isFinite(motion.lastRaw)
+        ? measurement.raw - motion.lastRaw
+        : 0;
+      measurement.encoderJumpWarning = captureGapSeconds != null
+        && captureGapSeconds > 0
+        && captureGapSeconds < 2
+        && Math.abs(rawDelta) > state.encoder.countsPerRev * 0.03;
+      if (measurement.latencySpike) {
+        addEvent(
+          "warning",
+          "记录到链路延迟尖峰",
+          `m=${order} ${side === "left" ? "左" : "右"}侧延迟 ${Math.round(measurement.latencyMs)} ms`
+        );
+      }
+      if (measurement.encoderJumpWarning) {
+        addEvent(
+          "warning",
+          "记录到编码器计数跳变",
+          `m=${order} 在 ${captureGapSeconds.toFixed(2)} s 内计数变化 ${Math.round(rawDelta)}`
+        );
+      }
       const motionDelta = motion.lastCapturePosition == null
         ? 0
         : measurement.positionMm - motion.lastCapturePosition;
@@ -3164,6 +3283,10 @@
         motion.direction = nextDirection;
       }
       motion.lastCapturePosition = measurement.positionMm;
+      motion.lastCaptureAt = capturedAtMs;
+      motion.lastRaw = measurement.raw;
+      motion.recentLatencies.push(numberOr(measurement.latencyMs, 18));
+      motion.recentLatencies = motion.recentLatencies.slice(-20);
 
     if (!state.session.captures) state.session.captures = [];
     state.session.captures.push(measurement);
@@ -4321,7 +4444,13 @@
     addEvent("session", "实验会话已开始", `${student} · ${group} · ${deviceId}`, { silent: true });
     addEvent("encoder", state.encoder.mode === "demo" ? "演示编码器已启用" : "编码器已处于在线状态", `换算系数 ${settings.pitchMm.toFixed(3)} mm/rev`, { silent: true });
     state.manualRingUntil = 0;
-    state.measurementMotion = { lastCapturePosition: null, direction: 0 };
+    state.measurementMotion = {
+      lastCapturePosition: null,
+      direction: 0,
+      lastCaptureAt: null,
+      lastRaw: null,
+      recentLatencies: []
+    };
     state.vision.lockUntil = 0;
     resetRingSequence();
     renderAll();
@@ -4360,7 +4489,13 @@
     });
     state.currentRingOrder = demoStartOrder;
     state.manualRingUntil = 0;
-    state.measurementMotion = { lastCapturePosition: null, direction: 0 };
+    state.measurementMotion = {
+      lastCapturePosition: null,
+      direction: 0,
+      lastCaptureAt: null,
+      lastRaw: null,
+      recentLatencies: []
+    };
     state.ringSummary = { status: "ready", rows: sequenceDisplayRows(), activeIndex: null, pendingIndex: null, lastDetectedAt: null };
     state.vision.lockUntil = 0;
     persistRingSequence();
