@@ -498,15 +498,17 @@ label {
 }
 
 #heroRingCanvas {
-  position: relative;
+  position: absolute;
   z-index: 2;
+  top: 50%;
+  left: 50%;
   width: min(102%, 690px);
   aspect-ratio: 1;
   border-radius: 50%;
   filter: blur(4.2px) saturate(1.2) brightness(1.14) contrast(0.9);
   mask-image: radial-gradient(circle, #000 0 42%, rgba(0, 0, 0, 0.9) 58%, transparent 79%);
   mix-blend-mode: screen;
-  transform: rotate(-7deg) scale(1.04);
+  transform: translate(-50%, -50%) rotate(-7deg) scale(1.04);
   animation: ringDrift 24s ease-in-out infinite alternate;
 }
 
@@ -4708,10 +4710,10 @@ input[type="range"]::-moz-range-thumb {
 
 @keyframes ringDrift {
   from {
-    transform: rotate(-7deg) scale(1.04);
+    transform: translate(-50%, -50%) rotate(-7deg) scale(1.04);
   }
   to {
-    transform: rotate(-4deg) scale(1.065);
+    transform: translate(-50%, -50%) rotate(-4deg) scale(1.065);
   }
 }
 
