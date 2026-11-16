@@ -486,11 +486,14 @@ label {
   content: "";
   position: absolute;
   z-index: 0;
+  top: 50%;
+  left: 50%;
   width: min(94%, 660px);
   aspect-ratio: 1;
   background: radial-gradient(circle, rgba(242, 189, 69, 0.15), rgba(242, 189, 69, 0.025) 50%, transparent 73%);
   border-radius: 50%;
   filter: blur(34px);
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
@@ -510,6 +513,8 @@ label {
 .hero-ring-orbit {
   position: absolute;
   z-index: 1;
+  top: 50%;
+  left: 50%;
   width: min(108%, 710px);
   aspect-ratio: 1;
   border: 1px solid rgba(242, 189, 69, 0.08);
@@ -518,6 +523,7 @@ label {
     0 0 0 38px rgba(255, 255, 255, 0.015),
     0 0 0 95px rgba(242, 189, 69, 0.015);
   filter: blur(0.4px);
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
