@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>牛顿环 — 重力接触变形对干涉图样的影响</title>
+<style>
+  :root {
+    --bg: #ffffff; --bg-panel: #f7f8fa; --bg-surface: #edeff3;
+    --brand: #b8860b; --accent: #c9952e;
+    --lens-blue: #3a6d99;
+    --text-primary: #1a1d22; --text-secondary: #555a62; --text-dim: #8a8e96;
+    --border-subtle: #d5d8de; --border-active: #b0b5be;
+    --gap-color: #2e7d32;
+    --contact-color: #c62828;
+    --nav-h: 48px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html {
+    font-size: 16px; scroll-behavior: smooth;
+    background: var(--bg); color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased; line-height: 1.6;
+  }
+  body { min-height: 100vh; padding-top: var(--nav-h); }
+  .nav {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    height: var(--nav-h); background: var(--bg);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex; align-items: center;
+    padding: 0 24px;
+  }
+  .nav-brand { font-family: 'DM Serif Display', Georgia, serif; font-size:1rem; color:var(--brand); letter-spacing:0.02em; }
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    height: calc(100vh - var(--nav-h));
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .center-col {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative; padding: 2px 0;
+  }
+  .center-guide {
+    position: absolute; top: 0; bottom: 0; left: 50%;
+    width: 1px;
+    background: repeating-linear-gradient(to bottom, var(--lens-blue) 0px, var(--lens-blue) 3px, transparent 3px, transparent 10px);
+    opacity: 0.08; z-index: 0; pointer-events: none;
+  }
+  .rings-section {
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; position: relative; flex-shrink: 1; min-height: 0;
+  }
+  .rings-section canvas {
+    display: block; border-radius: 50%;
+    background: #0e1018;
+    box-shadow: 0 0 30px rgba(0,0,0,0.06), 0 0 60px rgba(0,0,0,0.03);
+  }
+  .rings-reticle {
+    position: absolute; pointer-events: none;
+    top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1;
+  }
+  .rings-reticle::before, .rings-reticle::after {
+    content: ''; position: absolute; background: var(--lens-blue); opacity: 0.25;
+  }
+  .rings-reticle::before { width: 1px; height: 50px; top: -25px; left: 0; }
+  .rings-reticle::after  { width: 50px; height: 1px; left: -25px; top: 0; }
+  .apparatus-section { padding: 0; flex-shrink: 0; }
+  .apparatus-svg-wrap svg { display: block; height: auto; }
+  .apparatus-legend {
+    display: flex; gap: 12px; align-items: center;
+    font-size: 0.72rem; font-weight: 600; color: var(--lens-blue);
+    flex-wrap: wrap; justify-content: center; margin-top: 4px;
+  }
+  .apparatus-legend span { display: flex; align-items: center; gap: 4px; }
+  .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .controls-panel {
+    background: var(--bg-panel); padding: 10px 10px;
+    display: flex; flex-direction: column; gap: 6px;
+    overflow-y: auto; border-left: 1px solid var(--border-subtle);
+    align-items: center; text-align: center;
+  }
+  .ctrl-group { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+  .ctrl-label {
+    display: flex; justify-content: center; align-items: baseline; gap: 6px;
+    font-size: 0.88rem; font-weight: 800; color: var(--text-primary);
+  }
+  .ctrl-label .symbol { color: var(--brand); font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 800; }
+  .ctrl-value { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--brand); font-weight: 800; }
+  .ctrl-desc { font-size: 0.62rem; color: var(--text-dim); line-height: 1.3; text-align: center; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 75%; height: 3px; background: var(--border-active); border-radius: 2px; outline: none; margin: 0 auto;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--brand); cursor: pointer;
+    box-shadow: 0 0 6px rgba(184,134,11,0.3); transition: box-shadow 0.2s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 12px rgba(184,134,11,0.4); }
+  .gap-ctrl .ctrl-label .symbol { color: var(--gap-color); }
+  .gap-ctrl .ctrl-value { color: var(--gap-color); }
+  .gap-ctrl.gap-neg .ctrl-value { color: var(--contact-color); }
+  .gap-ctrl.gap-neg .ctrl-label .symbol { color: var(--contact-color); }
+  .gap-ctrl input[type="range"]::-webkit-slider-thumb { background: var(--gap-color); box-shadow: 0 0 6px rgba(46,125,50,0.3); }
+  .gap-ctrl.gap-neg input[type="range"]::-webkit-slider-thumb { background: var(--contact-color); box-shadow: 0 0 6px rgba(198,40,40,0.4); }
+  .info-bar {
+    background: var(--bg-panel); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);
+    padding: 4px 16px; text-align: center; font-size: 0.7rem; color: var(--text-secondary);
+    display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
+  }
+  .info-bar .contact-spot { color: var(--contact-color); font-weight: 700; }
+  .info-bar .no-contact { color: var(--gap-color); font-weight: 600; }
+  .info-bar .highlight { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+  .footer {
+    border-top: 1px solid var(--border-subtle); padding: 6px 32px; text-align: center;
+    font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.03em; background: var(--bg);
+  }
+  @media (max-width: 860px) {
+    .main-grid { grid-template-columns: 1fr; height: auto; }
+    .controls-panel { border-left: none; border-top: 1px solid var(--border-subtle); }
+  }
+  :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 2px; }
+  .nav { display: none !important; }
+  body { padding-top: 0 !important; }
+  .main-grid { height: 100vh !important; }
+  @media (max-width: 960px) {
+    .main-grid { height: auto !important; min-height: 100vh; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav"><span class="nav-brand">Newton's Rings — 重力接触变形 &amp; 暗斑</span></nav>
+
+<div class="main-grid">
+  <div class="center-col">
+    <div class="center-guide"></div>
+    <div class="rings-section">
+      <canvas id="ringsCanvas" width="500" height="500"></canvas>
+      <div class="rings-reticle"></div>
+    </div>
+    <div class="apparatus-section">
+      <div class="apparatus-svg-wrap">
+        <svg id="apparatusSvg" viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="700" height="220" fill="transparent"/>
+          <line id="contactLine" x1="0" y1="0" x2="0" y2="0" stroke="none" stroke-width="0"/>
+          <path id="lensCurve" fill="rgba(70,130,180,0.22)" stroke="#5b8db8" stroke-width="1.2"/>
+          <path id="mediumWedge" fill="rgba(80,140,190,0.15)" stroke="none"/>
+          <rect id="glassPlate" x="30" y="140" width="640" height="14" fill="rgba(50,110,155,0.35)" stroke="#4a8ab5" stroke-width="1.1" rx="1"/>
+          <text id="gapLabel" x="358" y="127" font-family="JetBrains Mono,monospace" font-size="14" fill="#2e7d32" font-weight="900"></text>
+        </svg>
+      </div>
+      <div class="apparatus-legend">
+        <span><span class="legend-swatch" style="background:rgba(70,130,180,0.4);"></span>平凸透镜</span>
+        <span><span class="legend-swatch" style="background:rgba(80,150,200,0.3);"></span>介质层</span>
+        <span><span class="legend-swatch" style="background:rgba(50,110,155,0.5);"></span>平面玻璃</span>
+        <span><span class="legend-swatch" style="background:#2e7d32;"></span>中心间距 d₀</span>
+        <span><span class="legend-swatch" style="background:rgba(198,40,40,0.4);"></span>接触暗斑</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-panel">
+    <div class="ctrl-group gap-ctrl" id="gapCtrlGroup">
+      <div class="ctrl-label"><span><span class="symbol">d₀</span> 中心间距</span><span class="ctrl-value" id="valGap">0.00 μm</span></div>
+      <input type="range" id="sliderGap" min="-1.2" max="2" step="0.01" value="0">
+      <div class="ctrl-desc" id="descGap">d₀≥0：无接触；d₀&lt;0：重力压入</div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label"><span><span class="symbol">λ</span> 入射波长</span><span class="ctrl-value" id="valLambda">589 nm</span></div>
+      <input type="range" id="sliderLambda" min="380" max="780" step="1" value="589">
+      <div class="ctrl-desc">可见光 380-780 nm</div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label"><span><span class="symbol">R</span> 曲率半径</span><span class="ctrl-value" id="valR">1.55 m</span></div>
+      <input type="range" id="sliderR" min="1.55" max="2" step="0.01" value="1.55">
+      <div class="ctrl-desc">曲率越大条纹越稀疏（1.55-2m）</div>
+    </div>
+  </div>
+</div>
+
+<div class="info-bar" id="infoBar">
+  <span>d₀ = <span class="highlight" id="infoD0">0.00 μm</span></span>
+  <span>接触半径 r_接触 = <span class="highlight" id="infoRcontact">0.000 μm</span></span>
+  <span id="infoStatus" class="no-contact">状态：无接触（中央暗点）</span>
+</div>
+
+<footer class="footer">牛顿环干涉仿真 · 重力接触变形模型 · d(r) = max(0, d₀ + r²/2R)，当 d₀&lt;0 时中心形成暗斑</footer>
+
+<script>
+const ringsCanvas = document.getElementById('ringsCanvas');
+const ringsCtx = ringsCanvas.getContext('2d');
+const apparatusSvg = document.getElementById('apparatusSvg');
+
+let R = 1.55, d0 = 0, lambda = 589;
+const n_medium = 1.0;
+const rMax = 0.004;
+
+const sliderR = document.getElementById('sliderR');
+const sliderGap = document.getElementById('sliderGap');
+const sliderLambda = document.getElementById('sliderLambda');
+const valR = document.getElementById('valR');
+const valGap = document.getElementById('valGap');
+const valLambda = document.getElementById('valLambda');
+const descGap = document.getElementById('descGap');
+const gapCtrlGroup = document.getElementById('gapCtrlGroup');
+const infoD0 = document.getElementById('infoD0');
+const infoRcontact = document.getElementById('infoRcontact');
+const infoStatus = document.getElementById('infoStatus');
+const contactLineEl = document.getElementById('contactLine');
+
+function renderRings() {
+  const w = ringsCanvas.width, h = ringsCanvas.height;
+  const imageData = ringsCtx.createImageData(w, h);
+  const data = imageData.data;
+  const cx = w/2, cy = h/2;
+  const scale = rMax / (Math.min(w,h)/2);
+  const lambdaM = lambda * 1e-9;
+  const d0M = d0 * 1e-6;
+
+  // Contact radius (only meaningful when d0 < 0):
+  //   d₀ + r²/(2R) = 0  →  r_contact = √(-2·R·d₀)
+  let rContactReal = 0;
+  if (d0M < 0) {
+    rContactReal = Math.sqrt(-2 * R * d0M);
+  }
+
+  for (let py = 0; py < h; py++) {
+    for (let px = 0; px < w; px++) {
+      const idx = (py * w + px) * 4;
+      const r = Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy)) * scale;
+
+      // A fixed, gently uneven contact outline; deformation fades into circular outer rings.
+      let effectiveR = r;
+      if (rContactReal > 0 && r < rContactReal * 1.8) {
+        const angle = Math.atan2(py - cy, px - cx);
+        const irregularity = 0.035 * Math.sin(2 * angle + 0.7)
+          + 0.040 * Math.sin(3 * angle - 1.1)
+          + 0.018 * Math.cos(5 * angle + 0.4)
+          + 0.008 * Math.sin(9 * angle + 1.8);
+        const fade = Math.max(0, Math.min(1, (r / rContactReal - 1.15) / 0.65));
+        const influence = 1 - fade * fade * (3 - 2 * fade);
+        effectiveR = r / (1 + irregularity * influence);
+      }
+
+      const thickness = Math.max(0, d0M + effectiveR * effectiveR / (2 * R));
+      const inContact = d0M < 0 && effectiveR <= rContactReal;
+
+      const phase = 2 * Math.PI * n_medium * thickness / lambdaM;
+      const I = Math.sin(phase) * Math.sin(phase);
+      const Igamma = Math.pow(I, 1/25);
+
+      if (inContact) {
+        // Contact zone (d0<0): lens meets glass → pure destructive interference
+        data[idx]     = 4;
+        data[idx + 1] = 3;
+        data[idx + 2] = 5;
+      } else {
+        // Normal interference: gamma-corrected sin² pattern
+        data[idx]     = Math.round(8 + Igamma * 210);
+        data[idx + 1] = Math.round(6 + Igamma * 175);
+        data[idx + 2] = Math.round(10 + Igamma * 60);
+      }
+      data[idx + 3] = 255;
+    }
+  }
+  ringsCtx.putImageData(imageData, 0, 0);
+  return rContactReal;
+}
+
+function updateApparatus(rContactReal) {
+  const Lsvg = 30, Cx = 350, Rsvg = 670, glassY = 140;
+  // R∈[1.55,2.0]：sag 从 130（最弯）到 60（最平）
+  const sag = 60 + 70 * ((2.0 - R) / 0.45);
+  const s = Math.max(60, Math.min(130, sag));
+  // When d0<0, lens bottom is clamped to glass; contact line already drawn
+  // Ensure lens curve doesn't poke below glass surface
+  const d0Px = d0 * 20;
+  let botY = glassY - s - d0Px;
+  const clampedBotY = Math.min(botY, glassY);
+
+  const curveD = 'M' + Lsvg + ',' + clampedBotY + ' Q' + Cx + ',' + (glassY + s) + ' ' + Rsvg + ',' + clampedBotY;
+  document.getElementById('lensCurve').setAttribute('d', curveD);
+
+  const wedge = document.getElementById('mediumWedge');
+  wedge.setAttribute('d', 'M' + Lsvg + ',' + clampedBotY + ' Q' + Cx + ',' + (glassY + s) + ' ' + Rsvg + ',' + clampedBotY + ' V' + glassY + ' H' + Lsvg + ' Z');
+  wedge.setAttribute('fill', 'rgba(80,145,200,0.15)');
+
+
+  // Contact zone: red line on the glass surface (replaces rect frame)
+  if (rContactReal > 0) {
+    const pxPerM = (Rsvg - Lsvg) / rMax;
+    const rContactPx = rContactReal * pxPerM;
+    contactLineEl.setAttribute('x1', Cx - rContactPx);
+    contactLineEl.setAttribute('y1', glassY);
+    contactLineEl.setAttribute('x2', Cx + rContactPx);
+    contactLineEl.setAttribute('y2', glassY);
+    contactLineEl.setAttribute('stroke', '#c62828');
+    contactLineEl.setAttribute('stroke-width', '2.5');
+  } else {
+    contactLineEl.setAttribute('stroke', 'none');
+  }
+
+  if (d0 < 0) {
+  } else {
+  }
+}
+
+function updateAll() {
+  const rContactReal = renderRings();
+  updateApparatus(rContactReal);
+
+  infoD0.textContent = d0.toFixed(2) + ' μm';
+  infoRcontact.textContent = (rContactReal * 1e6).toFixed(3) + ' μm';
+
+  if (d0 < 0) {
+    infoStatus.textContent = '状态：接触变形（中心暗斑）';
+    infoStatus.className = 'contact-spot';
+    gapCtrlGroup.classList.add('gap-neg');
+    descGap.textContent = '重力压入，中心形成暗斑';
+    valGap.style.color = '#c62828';
+  } else {
+    infoStatus.textContent = '状态：无接触（中央暗点）';
+    infoStatus.className = 'no-contact';
+    gapCtrlGroup.classList.remove('gap-neg');
+    descGap.textContent = 'd₀≥0：无接触；d₀<0：重力压入';
+    valGap.style.color = '#2e7d32';
+  }
+}
+
+sliderR.addEventListener('input', function() {
+  R = +sliderR.value; valR.textContent = R.toFixed(2) + ' m'; updateAll();
+});
+sliderGap.addEventListener('input', function() {
+  d0 = +sliderGap.value; valGap.textContent = d0.toFixed(2) + ' μm'; updateAll();
+});
+sliderLambda.addEventListener('input', function() {
+  lambda = +sliderLambda.value; valLambda.textContent = lambda + ' nm'; updateAll();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT') return;
+  const step = e.shiftKey ? 0.05 : 0.01;
+  if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+    e.preventDefault(); d0 = Math.min(2, d0 + step);
+    sliderGap.value = d0; valGap.textContent = d0.toFixed(2) + ' μm'; updateAll();
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+    e.preventDefault(); d0 = Math.max(-1.2, d0 - step);
+    sliderGap.value = d0; valGap.textContent = d0.toFixed(2) + ' μm'; updateAll();
+  }
+});
+
+function syncSizes() {
+  const col = document.querySelector('.center-col');
+  if (!col) return;
+  const maxW = Math.min(col.clientWidth - 12, 440);
+  const size = Math.max(280, maxW);
+  ringsCanvas.style.width = size + 'px';
+  ringsCanvas.style.height = size + 'px';
+  apparatusSvg.style.width = size + 'px';
+}
+
+window.addEventListener('resize', syncSizes);
+syncSizes();
+updateAll();
+</script>
+</body>
+</html>

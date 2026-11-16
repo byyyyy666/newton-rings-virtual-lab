@@ -1,0 +1,313 @@
+html.innovation-embed,
+html.innovation-embed body {
+  min-height: 0;
+  height: auto;
+  overflow-x: hidden;
+}
+
+html.innovation-embed body {
+  background: #edf2ee;
+}
+
+.innovation-embed-tabs {
+  display: none;
+}
+
+html.innovation-embed .innovation-embed-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 10px;
+  background: rgba(247, 250, 248, 0.96);
+  border-bottom: 1px solid #cbd6d0;
+  backdrop-filter: blur(10px);
+}
+
+.innovation-embed-tab {
+  min-height: 34px;
+  padding: 0 15px;
+  color: #61736a;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.innovation-embed-tab:hover {
+  color: #1c4438;
+  background: #e7efeb;
+}
+
+.innovation-embed-tab.active {
+  color: #fff;
+  background: #245b4b;
+  border-color: #245b4b;
+}
+
+html.innovation-embed .app-shell {
+  min-height: 0;
+}
+
+html.innovation-embed .app-rail,
+html.innovation-embed .topbar,
+html.innovation-embed #view-live .view-heading {
+  display: none;
+}
+
+html.innovation-embed .toast-stack {
+  display: none;
+}
+
+html.innovation-embed .app-frame {
+  min-height: 0;
+  margin-left: 0;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+html.innovation-embed .workspace {
+  max-width: none;
+  padding: 8px;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+html.innovation-embed #view-live {
+  padding: 0;
+}
+
+html.innovation-embed #view-process,
+html.innovation-embed #view-process .work-panel,
+html.innovation-embed .process-layout,
+html.innovation-embed .process-side {
+  min-width: 0;
+}
+
+html.innovation-embed #view-live .live-console {
+  gap: 10px;
+}
+
+.encoder-process-panel {
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.encoder-process-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-bottom: 1px solid var(--line);
+}
+
+.encoder-process-stats > div {
+  min-width: 0;
+  padding: 12px 13px;
+  border-right: 1px solid var(--line);
+}
+
+.encoder-process-stats > div:last-child {
+  border-right: 0;
+}
+
+.encoder-process-stats span,
+.encoder-process-stats small {
+  display: block;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.encoder-process-stats strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.encoder-process-stats .current strong {
+  color: var(--green);
+  font-size: 20px;
+}
+
+.encoder-history-chart-wrap {
+  position: relative;
+  padding: 12px;
+  background: #f3f7f4;
+  border-bottom: 1px solid var(--line);
+}
+
+#encoderHistoryChart {
+  display: block;
+  width: 100%;
+  height: 270px;
+  background: #fbfcfb;
+  border: 1px solid #d8e1dc;
+  border-radius: 5px;
+}
+
+.encoder-history-empty {
+  display: grid;
+  place-items: center;
+  min-height: 72px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.encoder-history-chart-wrap .encoder-history-empty {
+  position: absolute;
+  inset: 12px;
+  min-height: 0;
+  background: rgba(251, 252, 251, 0.78);
+  pointer-events: none;
+}
+
+.encoder-history-chart-wrap .encoder-history-empty[hidden],
+.encoder-history-table-wrap .encoder-history-empty[hidden] {
+  display: none;
+}
+
+.encoder-process-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.encoder-process-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.encoder-process-toolbar .ghost-button,
+.encoder-process-toolbar .primary-action {
+  min-height: 34px;
+  padding: 0 11px;
+  font-size: 10px;
+}
+
+.encoder-history-table-wrap {
+  max-height: 260px;
+  overflow: auto;
+  overscroll-behavior-x: contain;
+}
+
+.encoder-history-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.encoder-history-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 9px 11px;
+  color: var(--muted);
+  background: #edf3ef;
+  font-size: 9px;
+  font-weight: 500;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.encoder-history-table td {
+  padding: 7px 11px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  border-bottom: 1px solid #e1e7e3;
+}
+
+.encoder-history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+html.innovation-embed #view-process .view-heading {
+  margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+  html.innovation-embed #view-process .view-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  html.innovation-embed #view-process .view-heading .ghost-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  html.innovation-embed .process-layout,
+  html.innovation-embed .process-side {
+    grid-template-columns: 1fr;
+  }
+
+  .encoder-history-chart-wrap {
+    min-width: 0;
+  }
+
+  .encoder-process-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .encoder-process-stats > div:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .encoder-process-stats > div:nth-child(-n + 4) {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .encoder-process-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .encoder-process-toolbar > div {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .encoder-process-toolbar > div:last-child {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  html.innovation-embed .encoder-process-toolbar .primary-action.compact {
+    width: 100%;
+    padding: 0 11px;
+    white-space: nowrap;
+  }
+
+  .encoder-process-toolbar .ghost-button {
+    width: 100%;
+    padding-right: 6px;
+    padding-left: 6px;
+    white-space: nowrap;
+  }
+
+  html.innovation-embed .encoder-process-toolbar .primary-action.compact span {
+    display: inline;
+  }
+
+  #encoderHistoryChart {
+    height: 220px;
+  }
+}
+
+@media (max-width: 900px) {
+  html.innovation-embed .workspace {
+    padding: 6px;
+  }
+}

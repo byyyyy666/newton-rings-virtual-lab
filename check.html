@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>网站资源自检</title>
+  <style>
+    body { margin: 0; padding: 24px; color: #eaf2ee; background: #111816; font-family: "Microsoft YaHei", sans-serif; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { color: #9db0a7; }
+    .list { display: grid; gap: 7px; max-width: 980px; margin-top: 20px; }
+    .item { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; background: #19241f; border: 1px solid #2a3c34; }
+    .ok { color: #83d7b8; }
+    .bad { color: #ff9c8f; }
+    code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    small { color: #789087; }
+  </style>
+</head>
+<body>
+  <h1>GitHub Pages 资源自检</h1>
+  <p>每一项应显示“正常”。出现 404 时，说明对应文件或目录没有上传成功。</p>
+  <div class="list" id="list"></div>
+  <script>
+    const files = [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "operation-model-viewer.js",
+      "model-viewer.js",
+      "ring-detector.js",
+      "innovation-demo.html",
+      "innovation-demo.css",
+      "innovation-demo-app.js",
+      "innovation-demo-embed.css",
+      "device-viewer.html",
+      "libs/three.module.js",
+      "libs/OrbitControls.js",
+      "libs/GLTFLoader.js",
+      "libs/BufferGeometryUtils.js",
+      "libs/lucide.min.js",
+      "assets-core/device.glb",
+      "assets-core/demo/newton-rings-demo.mp4",
+      "assets-core/simulations/adjustable-simulation.html",
+      "assets-core/simulations/contact-deformation.html",
+      "assets-core/simulations/装置.jpg",
+      "assets-instruments/microscope-01.png",
+      "assets-instruments/operation-device-preview.png",
+      "assets-instruments/micrometer-main-scale-detail.png",
+      "assets-instruments/micrometer-drum-detail.png"
+    ];
+    const list = document.getElementById("list");
+    for (const file of files) {
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `<strong>检查中</strong><code>${file}</code><small>--</small>`;
+      list.appendChild(row);
+      fetch(`./${file}`, { method: "HEAD", cache: "no-store" })
+        .then((response) => {
+          if (!response.ok) throw new Error(String(response.status));
+          const size = Number(response.headers.get("content-length") || 0);
+          row.innerHTML = `<strong class="ok">正常</strong><code>${file}</code><small>${size ? `${(size / 1024 / 1024).toFixed(3)} MB` : "OK"}</small>`;
+        })
+        .catch((error) => {
+          row.innerHTML = `<strong class="bad">失败</strong><code>${file}</code><small>${error.message}</small>`;
+        });
+    }
+  </script>
+</body>
+</html>

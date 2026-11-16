@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111816">
+  <title>牛顿环等厚干涉虚拟仿真平台</title>
+  <meta name="description" content="牛顿环薄膜干涉虚拟仿真实验平台，包含三维实验仪器、交互式读数、创新实验装置、实时图像识别、编码器过程档案与最小二乘法数据处理。">
+  <meta name="keywords" content="牛顿环,薄膜干涉,等厚干涉,虚拟仿真实验,大学物理实验,最小二乘法,编码器,读数显微镜">
+  <meta name="author" content="Newton Lab">
+  <meta name="robots" content="index,follow">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:title" content="牛顿环等厚干涉虚拟仿真平台">
+  <meta property="og:description" content="从三维仪器观察、手动读数到实时采集、过程档案和最小二乘法数据处理。">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="牛顿环等厚干涉虚拟仿真平台">
+  <meta name="twitter:description" content="从三维仪器观察、手动读数到实时采集、过程档案和最小二乘法数据处理。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23111816'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23f2bd45' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f2bd45'/%3E%3C/svg%3E">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "牛顿环等厚干涉虚拟仿真平台",
+      "description": "融合三维仪器观察、交互式读数、创新实验实时演示、编码器过程档案和最小二乘法数据处理的物理实验平台。",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any",
+      "inLanguage": "zh-CN",
+      "isAccessibleForFree": true
+    }
+  </script>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <div class="scroll-progress" aria-hidden="true"><span id="scrollProgress"></span></div>
+
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="icon-arrow" viewBox="0 0 24 24">
+      <path d="M5 12h14M13 6l6 6-6 6"></path>
+    </symbol>
+    <symbol id="icon-rotate" viewBox="0 0 24 24">
+      <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"></path>
+    </symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24">
+      <path d="m9 7 8 5-8 5V7Z"></path>
+    </symbol>
+    <symbol id="icon-reset" viewBox="0 0 24 24">
+      <path d="M4 4v6h6M4.5 10a8 8 0 1 1-.1 4"></path>
+    </symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24">
+      <path d="M12 3v12m-5-5 5 5 5-5M5 19h14"></path>
+    </symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24">
+      <path d="M12 16V4m-5 5 5-5 5 5M5 20h14"></path>
+    </symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+      <path d="M12 5v14M5 12h14"></path>
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path d="m5 12 4 4L19 6"></path>
+    </symbol>
+    <symbol id="icon-camera" viewBox="0 0 24 24">
+      <path d="M4 8h3l2-3h6l2 3h3v11H4V8Z"></path>
+      <circle cx="12" cy="13" r="3.5"></circle>
+    </symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24">
+      <path d="m6 6 12 12M18 6 6 18"></path>
+    </symbol>
+    <symbol id="icon-focus" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="5"></circle>
+      <path d="M12 3v3m0 12v3M3 12h3m12 0h3"></path>
+    </symbol>
+    <symbol id="icon-pause" viewBox="0 0 24 24">
+      <path d="M8 5v14M16 5v14"></path>
+    </symbol>
+    <symbol id="icon-layers" viewBox="0 0 24 24">
+      <path d="m12 3 9 5-9 5-9-5 9-5Z"></path>
+      <path d="m3 12 9 5 9-5M3 16l9 5 9-5"></path>
+    </symbol>
+  </svg>
+
+  <header class="topbar">
+    <a class="brand" href="#overview" aria-label="返回实验概览">
+      <span class="brand-mark" aria-hidden="true">
+        <i></i><i></i><i></i>
+      </span>
+      <span class="brand-copy">
+        <strong>NEWTON LAB</strong>
+        <small>薄膜干涉虚拟实验</small>
+      </span>
+    </a>
+    <nav class="main-nav" aria-label="实验板块导航">
+      <a class="is-active" href="#overview">实验概览</a>
+      <a href="#principle">实验原理</a>
+      <a href="#instruments">实验仪器</a>
+      <a href="#operation">实验操作</a>
+      <a href="#innovation">创新实验</a>
+      <a href="#data-processing">数据处理</a>
+      <a href="#quiz">预习自测</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section id="overview" class="hero observed-section">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">第十二届全国大学生物理实验竞赛 · 创新</p>
+          <h1>
+            <span>牛顿环等厚干涉</span>
+            <span>虚拟仿真平台</span>
+          </h1>
+          <p class="hero-lead">牛顿环薄膜干涉虚拟仿真实验</p>
+          <p class="hero-intro">
+            从光的等厚干涉出发，连接三维仪器建模、可调参仿真与最小二乘数据处理，
+            让一台经典光学实验在屏幕中完整运转。
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#principle">
+              进入虚拟仿真
+              <svg><use href="#icon-arrow"></use></svg>
+            </a>
+            <a class="button button-ghost" href="#instruments">查看仪器建模</a>
+          </div>
+        </div>
+
+        <div class="hero-visual hero-ring-visual" aria-label="虚化的单色牛顿环图样">
+          <div class="hero-ring-orbit" aria-hidden="true"></div>
+          <canvas id="heroRingCanvas" width="720" height="720" aria-label="单色牛顿环干涉图样"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="principle" class="section observed-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">02 / PRINCIPLE</p>
+          <h2>实验原理</h2>
+        </div>
+        <p class="section-summary">
+          平凸透镜与平板玻璃相切，中心向外形成厚度连续增大的介质薄膜。
+          同一圆周上的薄膜厚度相同，反射光在此叠加，形成明暗相间的同心环。
+        </p>
+      </div>
+
+      <div class="principle-grid">
+        <figure class="light-path-figure">
+          <div class="figure-heading">
+            <div>
+              <span>等厚干涉光路</span>
+              <strong>平凸透镜与平板玻璃</strong>
+            </div>
+            <div class="diagram-ray-legend" aria-label="光线颜色图例">
+              <span><i class="ray-key incident"></i>入射光</span>
+              <span><i class="ray-key reflected-one"></i>下表面反射</span>
+              <span><i class="ray-key reflected-two"></i>平板玻璃反射</span>
+              <span><i class="ray-key transmitted"></i>透射光</span>
+            </div>
+          </div>
+          <div class="ppt-principle-frame">
+            <svg class="principle-diagram" viewBox="0 0 760 560" role="img" aria-labelledby="principleTitle principleDesc">
+              <title id="principleTitle">牛顿环等厚干涉光路</title>
+              <desc id="principleDesc">入射光的一部分在平凸透镜下表面反射，另一部分透过介质薄膜后在平板玻璃上表面反射，两束反射光叠加形成干涉。</desc>
+              <defs>
+                <linearGradient id="diagramLens" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#a7dcd4" stop-opacity="0.72"></stop>
+                  <stop offset="58%" stop-color="#4f9d94" stop-opacity="0.26"></stop>
+                  <stop offset="100%" stop-color="#3f8179" stop-opacity="0.18"></stop>
+                </linearGradient>
+                <linearGradient id="diagramPlate" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#6aa99d" stop-opacity="0.48"></stop>
+                  <stop offset="100%" stop-color="#1f4e47" stop-opacity="0.64"></stop>
+                </linearGradient>
+                <linearGradient id="diagramFilm" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#f2bd45" stop-opacity="0.06"></stop>
+                  <stop offset="50%" stop-color="#f2bd45" stop-opacity="0.2"></stop>
+                  <stop offset="100%" stop-color="#f2bd45" stop-opacity="0.05"></stop>
+                </linearGradient>
+                <filter id="diagramGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
+                  <feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+                </filter>
+                <pattern id="diagramGrid" width="32" height="32" patternUnits="userSpaceOnUse">
+                  <path d="M32 0H0V32" fill="none" stroke="#a8c9bf" stroke-opacity="0.08"></path>
+                </pattern>
+                <marker id="diagramArrow" markerWidth="5.5" markerHeight="5.5" refX="5" refY="2.75" orient="auto">
+                  <path d="M0,0L5.5,2.75L0,5.5Z" fill="currentColor"></path>
+                </marker>
+              </defs>
+
+              <rect x="0.5" y="0.5" width="759" height="559" fill="url(#diagramGrid)"></rect>
+              <g opacity="0.22">
+                <line x1="50" y1="470" x2="710" y2="470" stroke="#82aca1" stroke-dasharray="3 8"></line>
+                <line x1="380" y1="30" x2="380" y2="535" stroke="#82aca1" stroke-dasharray="3 8"></line>
+              </g>
+
+              <g class="diagram-labels">
+                <g>
+                  <path d="M610 154h28"></path>
+                  <text x="646" y="159">平凸透镜</text>
+                </g>
+                <g>
+                  <path d="M612 249h26"></path>
+                  <text x="646" y="254">空气薄膜</text>
+                </g>
+                <g>
+                  <path d="M620 318h22"></path>
+                  <text x="646" y="323">平板玻璃</text>
+                </g>
+              </g>
+
+              <path class="diagram-lens" d="M120 158H640A383.33 383.33 0 0 1 380 278A383.33 383.33 0 0 1 120 158Z" fill="url(#diagramLens)"></path>
+              <path class="diagram-film" d="M120 158A383.33 383.33 0 0 0 380 278A383.33 383.33 0 0 0 640 158V278H120Z" fill="url(#diagramFilm)"></path>
+              <rect class="diagram-plate" x="118" y="278" width="524" height="42" rx="3" fill="url(#diagramPlate)"></rect>
+              <path class="diagram-lens-edge" d="M120 158H640A383.33 383.33 0 0 1 380 278A383.33 383.33 0 0 1 120 158Z"></path>
+              <line class="diagram-plate-edge" x1="118" y1="278" x2="642" y2="278"></line>
+              <line class="diagram-plate-edge" x1="118" y1="320" x2="642" y2="320"></line>
+
+              <g class="diagram-incident">
+                <line x1="520" y1="54" x2="520" y2="251"></line>
+                <path d="M520 58v174" marker-end="url(#diagramArrow)"></path>
+              </g>
+
+              <g class="diagram-split">
+                <path class="diagram-transmit" d="M520 251v25" marker-end="url(#diagramArrow)"></path>
+                <path class="diagram-ray-one" d="M510 251V80" marker-end="url(#diagramArrow)"></path>
+                <path class="diagram-ray-two" d="M530 278V80" marker-end="url(#diagramArrow)"></path>
+              </g>
+
+              <g class="diagram-gap">
+                <line x1="560" y1="233" x2="560" y2="276"></line>
+                <line x1="552" y1="233" x2="568" y2="233"></line>
+                <line x1="552" y1="276" x2="568" y2="276"></line>
+                <text x="576" y="258">d</text>
+              </g>
+
+              <circle class="diagram-contact" cx="380" cy="278" r="4"></circle>
+            </svg>
+          </div>
+          <figcaption>
+            一部分光在平凸透镜下表面直接反射，另一部分透过介质薄膜后在平板玻璃上表面反射，两束反射光叠加形成相干图样。
+          </figcaption>
+        </figure>
+
+        <div class="formula-column">
+          <article class="formula-block formula-block-dark">
+            <span class="formula-label">光程差</span>
+            <div class="equation">
+              <span>Δ = 2<i>n</i><i>d</i></span>
+              <span>+</span>
+              <span class="fraction"><b>λ</b><small>2</small></span>
+            </div>
+            <p>在介质折射率小于平板玻璃时，下表面反射会产生半波损失。</p>
+          </article>
+          <article class="formula-block">
+            <span class="formula-label">明纹与暗纹</span>
+            <div class="equation equation-small">
+              <span>明纹：2<i>n</i><i>d</i> = (<i>k</i> − ½)λ</span>
+              <span>暗纹：2<i>n</i><i>d</i> = <i>k</i>λ</span>
+            </div>
+          </article>
+          <article class="formula-block">
+            <span class="formula-label">曲率半径</span>
+            <div class="equation">
+              <span><i>R</i> =</span>
+              <span class="fraction"><b><i>n</i>(<i>D</i><sub>i</sub>² − <i>D</i><sub>j</sub>²)</b><small>4(<i>i</i> − <i>j</i>)λ</small></span>
+            </div>
+            <p>通过两个不同级次暗环直径的差值，消去中心位置和附加相位误差。</p>
+          </article>
+        </div>
+      </div>
+
+      <div id="simulation" class="simulation-shell embedded-simulation-shell">
+        <div class="simulation-heading">
+          <div>
+            <p class="section-kicker">VIRTUAL INTERFERENCE</p>
+            <h3>两套牛顿环虚拟仿真</h3>
+          </div>
+          <div class="simulation-switcher" role="tablist" aria-label="虚拟仿真切换">
+            <button class="is-active" type="button" role="tab" aria-selected="true" data-simulation="adjustable">参数调节仿真</button>
+            <button type="button" role="tab" aria-selected="false" data-simulation="contact">重力接触暗斑</button>
+          </div>
+        </div>
+        <div class="simulation-iframe-wrap">
+          <iframe
+            id="adjustableSimulation"
+            class="simulation-frame is-active"
+            src="./assets-core/simulations/adjustable-simulation.html"
+            title="牛顿环曲率半径、波长和介质折射率仿真"
+          ></iframe>
+          <iframe
+            id="contactSimulation"
+            class="simulation-frame"
+            src="./assets-core/simulations/contact-deformation.html"
+            title="牛顿环重力接触暗斑仿真"
+            hidden
+          ></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section id="instruments" class="section section-contrast observed-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">03 / INSTRUMENTS</p>
+          <h2>实验仪器</h2>
+        </div>
+        <p class="section-summary">
+          三套仪器均由 Blender 场景分层渲染。选择仪器后可拖动查看不同方位，
+          显微镜还可点亮目镜、物镜、调焦手轮与测微鼓轮。
+        </p>
+      </div>
+
+      <div class="instrument-selector" role="tablist" aria-label="实验仪器选择">
+        <button class="instrument-tab is-active" type="button" role="tab" aria-selected="true" data-instrument="microscope">
+          <span class="instrument-number">01</span>
+          <span>
+            <strong>读数显微镜</strong>
+            <small>放大干涉图样并完成位移读数</small>
+          </span>
+          <span class="instrument-state">可拆解</span>
+        </button>
+        <button class="instrument-tab" type="button" role="tab" aria-selected="false" data-instrument="newton-ring">
+          <span class="instrument-number">02</span>
+          <span>
+            <strong>牛顿环仪</strong>
+            <small>平凸透镜与平板玻璃组成介质膜</small>
+          </span>
+          <span class="instrument-state">可旋转</span>
+        </button>
+        <button class="instrument-tab" type="button" role="tab" aria-selected="false" data-instrument="sodium-lamp">
+          <span class="instrument-number">03</span>
+          <span>
+            <strong>钠光灯</strong>
+            <small>为干涉场提供稳定单色光</small>
+          </span>
+          <span class="instrument-state">可旋转</span>
+        </button>
+      </div>
+
+      <div class="instrument-explorer">
+        <div class="instrument-viewer" id="instrumentViewer" data-instrument="microscope" tabindex="0" role="group" aria-label="可拖动旋转的仪器视角">
+          <div class="viewer-glow" aria-hidden="true"></div>
+          <div class="instrument-model">
+            <img
+              id="instrumentImage"
+              src="./assets-instruments/microscope-01.png"
+              alt="读数显微镜三维模型"
+              width="720"
+              height="900"
+              draggable="false"
+            >
+            <div class="hotspot-layer" id="hotspotLayer">
+              <button class="hotspot" style="--x: 51.79%; --y: 11.56%" type="button" data-part="eyepiece" aria-label="点亮目镜">
+                <span></span><strong>目镜</strong>
+              </button>
+              <button class="hotspot" style="--x: 44.48%; --y: 63.50%" type="button" data-part="objective" aria-label="点亮物镜">
+                <span></span><strong>物镜</strong>
+              </button>
+              <button class="hotspot" style="--x: 39.19%; --y: 40.77%" type="button" data-part="focus" aria-label="点亮调焦手轮">
+                <span></span><strong>调焦手轮</strong>
+              </button>
+              <button class="hotspot" style="--x: 32.85%; --y: 52.45%" type="button" data-part="micrometer" aria-label="点亮测微鼓轮">
+                <span></span><strong>测微鼓轮</strong>
+              </button>
+            </div>
+            <div class="ring-label-layer" id="ringLabelLayer" hidden>
+              <span class="component-label" data-label="lens">平凸透镜</span>
+              <span class="component-label" data-label="glass">平板玻璃</span>
+              <span class="component-label" data-label="screws">旋紧螺钉</span>
+              <span class="component-label" data-label="base">底座</span>
+            </div>
+          </div>
+          <div class="viewer-tools">
+            <button class="viewer-tool" id="viewerPrev" type="button" title="向左旋转" aria-label="向左旋转">
+              <svg><use href="#icon-arrow"></use></svg>
+            </button>
+            <button class="viewer-tool viewer-reset" id="viewerReset" type="button" title="重置视角" aria-label="重置视角">
+              <svg><use href="#icon-rotate"></use></svg>
+            </button>
+            <button class="viewer-tool viewer-next" id="viewerNext" type="button" title="向右旋转" aria-label="向右旋转">
+              <svg><use href="#icon-arrow"></use></svg>
+            </button>
+          </div>
+          <div class="viewer-step" aria-live="polite">
+            <span>03</span>
+            <i></i>
+            <strong id="viewerFrameText">视角 02 / 05</strong>
+          </div>
+          <div class="viewer-hint" role="tooltip">拖动旋转</div>
+        </div>
+
+        <aside class="instrument-information" aria-live="polite">
+          <div class="instrument-info-heading">
+            <span id="instrumentIndex">01</span>
+            <div>
+              <p id="instrumentEnglish">READING MICROSCOPE</p>
+              <h3 id="instrumentName">读数显微镜</h3>
+            </div>
+          </div>
+          <p id="instrumentDescription" class="instrument-description">
+            由目镜、物镜、调焦机构和测微鼓轮组成。它把微小的干涉环放大，并将水平位移转换为可估读的毫米刻度。
+          </p>
+          <div class="ring-state-switch" id="ringStateSwitch" hidden>
+            <span>结构状态</span>
+            <div role="group" aria-label="牛顿环仪结构状态">
+              <button class="is-active" type="button" data-ring-state="assembled">组合态</button>
+              <button type="button" data-ring-state="exploded">拆解态</button>
+            </div>
+          </div>
+          <div id="instrumentFacts" class="instrument-facts">
+            <div>
+              <span>主尺分度值</span>
+              <strong>1 mm</strong>
+            </div>
+            <div>
+              <span>鼓轮分度值</span>
+              <strong>0.01 mm</strong>
+            </div>
+            <div>
+              <span>读数方式</span>
+              <strong>主尺 + 鼓轮</strong>
+            </div>
+          </div>
+          <div class="part-explorer" id="partExplorer">
+            <div class="part-explorer-heading">
+              <span>结构部件</span>
+              <small>点击亮起</small>
+            </div>
+            <div class="part-list">
+              <button type="button" class="part-button" data-part="eyepiece">
+                <span>01</span><strong>目镜</strong>
+              </button>
+              <button type="button" class="part-button" data-part="objective">
+                <span>02</span><strong>物镜</strong>
+              </button>
+              <button type="button" class="part-button" data-part="focus">
+                <span>03</span><strong>调焦手轮</strong>
+              </button>
+              <button type="button" class="part-button" data-part="micrometer">
+                <span>04</span><strong>测微鼓轮</strong>
+              </button>
+            </div>
+            <div class="part-detail">
+              <span class="part-detail-index" id="partDetailIndex">00</span>
+              <div>
+                <h4 id="partDetailTitle">选择部件</h4>
+                <p id="partDetailText">点击上方部件或模型中的亮点，查看各部件在调焦、观察与读数中的作用。</p>
+              </div>
+            </div>
+          </div>
+          <div class="generic-instrument-note" id="genericInstrumentNote" hidden>
+            拖动画面查看仪器的不同方位。旋转只改变观察角度，不改变仪器内部结构与光路关系。
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="operation" class="section observed-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">04 / OPERATION</p>
+          <h2>实验操作</h2>
+        </div>
+        <p class="section-summary">
+          左侧完整装置支持旋转观察，可直接拖动测微鼓轮或调节滑杆。测量台的微小位移会同步呈现在右侧视场中，
+          同时更新主尺与鼓轮读数。
+        </p>
+      </div>
+
+      <div class="operation-workbench">
+        <div class="operation-microscope">
+          <div class="panel-heading">
+            <span>读数显微镜测微机构</span>
+            <span class="panel-tag">LIVE CONTROL</span>
+          </div>
+          <div class="operation-viewport">
+            <div class="operation-device-stage live-device-stage" id="operationDeviceStage">
+              <img
+                class="operation-device-fallback"
+                id="operationDeviceFallback"
+                src="./assets-instruments/operation-device-preview.png"
+                alt="读数显微镜、牛顿环仪与钠光灯组成的完整实验装置"
+                width="660"
+                height="660"
+              >
+              <canvas id="operationDeviceCanvas" aria-label="可旋转的牛顿环完整实验装置三维模型"></canvas>
+              <div class="operation-device-loader" id="operationDeviceLoader">
+                <span class="operation-loader-ring" aria-hidden="true"></span>
+                <strong>正在载入完整装置</strong>
+                <small>读数显微镜 + 牛顿环仪 + 钠光灯</small>
+              </div>
+              <div class="operation-device-badge">
+                <span>3D DIGITAL TWIN</span>
+                <strong id="operationDeviceStatus">拖动旋转观察</strong>
+              </div>
+              <div class="operation-device-hint">
+                <span>拖动鼓轮调读数</span>
+                <span>拖动空白处旋转</span>
+              </div>
+              <div class="operation-device-tools" aria-label="三维装置视角控制">
+                <button id="operationDeviceDrum" type="button" title="俯视查看主尺与鼓轮刻度">
+                  <svg><use href="#icon-focus"></use></svg>
+                  <span>刻度俯视</span>
+                </button>
+                <button id="operationDeviceRotate" type="button" title="自动旋转视角">
+                  <svg><use href="#icon-rotate"></use></svg>
+                  <span>旋转视角</span>
+                </button>
+                <button id="operationDeviceReset" type="button" title="重置装置视角">
+                  <svg><use href="#icon-reset"></use></svg>
+                  <span>重置</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="wheel-control">
+            <label for="wheelSlider">
+              <span>主尺行程</span>
+              <output id="wheelAngleOutput">22.000 mm</output>
+            </label>
+            <input id="wheelSlider" type="range" min="0" max="50" value="22" step="0.001" aria-label="沿主尺连续转动测微鼓轮">
+            <div class="wheel-range-limits" aria-hidden="true">
+              <span>0 mm</span>
+              <small>一圈 1.00 mm，连续进位</small>
+              <span>50 mm</span>
+            </div>
+            <div class="micro-reading">
+              <span>总读数</span>
+              <strong id="microscopeReading">22.000</strong>
+              <small>mm</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="operation-eyepiece">
+          <div class="panel-heading">
+            <span>显微镜视场</span>
+            <span class="panel-tag">40× OBJECTIVE</span>
+          </div>
+          <div class="eyepiece-frame">
+            <canvas id="measurementCanvas" width="720" height="720" aria-label="读数显微镜视场中的牛顿环"></canvas>
+            <div class="eyepiece-vignette" aria-hidden="true"></div>
+            <span class="reticle-label reticle-label-x">水平测微</span>
+            <span class="reticle-label reticle-label-y">十字叉丝</span>
+            <div class="eyepiece-read-prompt">请从主尺与鼓轮自行读取</div>
+          </div>
+          <div class="scan-status">
+            <span class="scan-icon" aria-hidden="true"></span>
+            <div>
+              <span>十字叉丝所在位置</span>
+              <strong id="scanStatus">靠近第 10 级暗环</strong>
+            </div>
+            <button class="icon-button" id="resetOperation" type="button" title="复位测微鼓轮" aria-label="复位测微鼓轮">
+              <svg><use href="#icon-reset"></use></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="micrometer-detail" aria-labelledby="micrometerDetailTitle">
+        <div class="micrometer-detail-header">
+          <div>
+            <span>READING DETAIL</span>
+            <h3 id="micrometerDetailTitle">主尺与测微鼓轮读数窗</h3>
+          </div>
+          <p><strong>读数 = 主尺示数 + 鼓轮格数 × 0.01 mm</strong></p>
+        </div>
+        <div class="micrometer-detail-grid">
+          <section class="detail-main-scale" aria-labelledby="detailMainScaleTitle">
+            <div class="detail-section-heading">
+              <span>01 / 主尺</span>
+              <h4 id="detailMainScaleTitle">读出整毫米数</h4>
+            </div>
+            <figure class="detail-main-window" aria-label="Blender 模型中的主尺细节">
+              <img src="./assets-instruments/micrometer-main-scale-detail.png" alt="读数显微镜模型上从 0 到 50 毫米的主尺刻度细节" width="1600" height="420">
+              <span class="detail-main-pointer" id="detailMainPointer" aria-hidden="true"></span>
+              <figcaption>MODEL RENDER</figcaption>
+            </figure>
+            <p>主尺与游标均为 Blender 实体建模，观察指标线所在位置读取整数刻度。</p>
+          </section>
+
+          <section class="detail-drum-section" aria-labelledby="detailDrumTitle">
+            <div class="detail-section-heading">
+              <span>02 / 测微鼓轮</span>
+              <h4 id="detailDrumTitle">读取与指标线对齐的格数</h4>
+            </div>
+            <div
+              class="detail-drum-stage"
+              id="detailDrumStage"
+              role="slider"
+              tabindex="0"
+              aria-label="放大的测微鼓轮读数窗口，可拖动或使用方向键调节"
+              aria-valuemin="0"
+              aria-valuemax="50"
+              aria-valuenow="22"
+              aria-valuetext="鼓轮当前位置，读数请自行判断"
+            >
+              <img class="detail-drum-image" id="detailDrumImage" src="./assets-instruments/micrometer-drum-detail.png" alt="读数显微镜模型中的测微鼓轮金属盘面" width="1000" height="1000">
+              <svg class="detail-drum-scale" id="detailDrumScale" viewBox="0 0 240 240" aria-hidden="true"></svg>
+              <span class="detail-drum-pointer" aria-hidden="true"></span>
+              <span class="detail-drum-center-label" aria-hidden="true">
+                <strong id="detailDrumValue">000</strong>
+                <small>格 · 0.01 mm / 格</small>
+              </span>
+            </div>
+            <p class="detail-drum-instruction" id="detailDrumInstruction" aria-live="polite">拖动盘面转动鼓轮，或使用方向键微调。</p>
+            <p>盘面取自 Blender 鼓轮模型，外圈按模型 00–99 分格放大显示并同步旋转。</p>
+          </section>
+
+          <section class="reading-practice" aria-labelledby="readingPracticeTitle">
+            <div class="detail-section-heading">
+              <span>03 / 自行读数</span>
+              <h4 id="readingPracticeTitle">先读数，再核对</h4>
+            </div>
+            <div class="reading-practice-form reading-practice-single">
+              <label for="practiceReadingInput">
+                <span>完整读数</span>
+                <span class="practice-input">
+                  <input id="practiceReadingInput" type="number" min="0" max="50" step="0.001" inputmode="decimal" placeholder="保留三位小数">
+                  <small>mm</small>
+                </span>
+              </label>
+            </div>
+            <button id="checkReading" class="button button-primary reading-check-button" type="button">
+              核对读数
+              <svg><use href="#icon-check"></use></svg>
+            </button>
+            <output class="reading-check-result" id="readingCheckResult" aria-live="polite">移动鼓轮后，请自行读取主尺与鼓轮，完整读数保留小数点后三位。</output>
+          </section>
+        </div>
+      </div>
+
+      <ol class="operation-steps">
+        <li>
+          <span>01</span>
+          <div><strong>预热光源</strong><p>开启钠光灯，等待黄光稳定。</p></div>
+        </li>
+        <li>
+          <span>02</span>
+          <div><strong>居中装置</strong><p>将牛顿环仪放到载物台中心。</p></div>
+        </li>
+        <li>
+          <span>03</span>
+          <div><strong>垂直入射</strong><p>调整光路，使单色光垂直照射。</p></div>
+        </li>
+        <li>
+          <span>04</span>
+          <div><strong>调清叉丝</strong><p>旋转目镜，使十字叉丝清晰。</p></div>
+        </li>
+        <li>
+          <span>05</span>
+          <div><strong>缓慢调焦</strong><p>调焦至同心环边缘锐利。</p></div>
+        </li>
+        <li>
+          <span>06</span>
+          <div><strong>同向读数</strong><p>沿同一方向转动鼓轮，减小空程误差。</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="innovation" class="section section-innovation observed-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">05 / INNOVATION</p>
+          <h2>创新实验装置<br>连接平台</h2>
+        </div>
+        <p class="section-summary">
+          现为操作演示，点击连接摄像头和编码器将实时同步真实数据。
+          过程档案包含编码器实时曲线、历史采样、实验事件流与导出功能，内容在模块内部滚动查看。
+        </p>
+      </div>
+
+      <div class="innovation-demo-embed">
+        <iframe
+          id="innovationPlatformFrame"
+          src="./innovation-demo.html?embed=1&amp;demo=30"
+          title="牛顿环智能实验平台实时测量模块"
+          allow="camera; microphone; fullscreen"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      </div>
+    </section>
+
+    <section id="data-processing" class="section section-data observed-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">06 / DATA PROCESSING</p>
+          <h2>最小二乘法数据处理</h2>
+        </div>
+        <p class="section-summary">
+          录入暗环左右读数，系统自动计算直径并完成 D² = bk + c 最小二乘拟合，
+          同步给出曲率半径、标准不确定度与拟合优度。
+        </p>
+      </div>
+
+      <div class="data-toolbar">
+        <div class="reference-data">
+          <button id="referenceDataButton" class="tool-action reference-data-button" type="button" aria-expanded="false" aria-controls="referenceDataMenu">
+            <svg><use href="#icon-plus"></use></svg>
+            <span>参考数据</span>
+          </button>
+          <div class="reference-menu" id="referenceDataMenu" hidden>
+            <span>选择参考实验组</span>
+            <button type="button" data-dataset="traditional">传统实验组</button>
+            <button type="button" data-dataset="innovation">创新实验组</button>
+          </div>
+        </div>
+        <div class="data-toolbar-actions">
+          <label class="file-action" title="导入 JSON 测量数据">
+            <svg><use href="#icon-upload"></use></svg>
+            <span>导入</span>
+            <input id="dataFileInput" type="file" accept=".json,application/json">
+          </label>
+          <button id="addDataRow" type="button" class="tool-action" title="添加测量行">
+            <svg><use href="#icon-plus"></use></svg>
+            <span>添加行</span>
+          </button>
+          <button id="exportCsv" type="button" class="tool-action" title="导出 CSV">
+            <svg><use href="#icon-download"></use></svg>
+            <span>导出</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="data-workbench">
+        <div class="data-entry">
+          <div class="panel-heading">
+            <span>原始读数</span>
+            <span class="panel-tag" id="dataStatus">0 个有效环</span>
+          </div>
+          <div class="data-parameters">
+            <label>
+              <span>入射波长 λ</span>
+              <span class="input-with-unit">
+                <input id="dataWavelength" type="number" min="300" max="900" step="0.1" value="589.3">
+                <small>nm</small>
+              </span>
+            </label>
+            <label>
+              <span>标称曲率半径 R₀</span>
+              <span class="input-with-unit">
+                <input id="nominalRadius" type="number" min="1" step="0.1" placeholder="可不填">
+                <small>mm</small>
+              </span>
+            </label>
+          </div>
+          <div class="table-wrap">
+            <div class="data-empty" id="dataEmptyState">
+              <strong>暂无测量数据</strong>
+              <span>选择参考数据，导入 JSON，或手动添加测量行。</span>
+            </div>
+            <table class="data-table" id="dataTable" hidden>
+              <thead>
+                <tr>
+                  <th scope="col">环序 k</th>
+                  <th scope="col">左读数 / mm</th>
+                  <th scope="col">右读数 / mm</th>
+                  <th scope="col">直径 D / mm</th>
+                  <th scope="col"><span class="sr-only">删除</span></th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody"></tbody>
+            </table>
+          </div>
+          <div class="data-actions">
+            <button id="fitButton" class="button button-primary" type="button">
+              最小二乘拟合
+              <svg><use href="#icon-arrow"></use></svg>
+            </button>
+            <button id="clearData" class="text-button" type="button">清空数据</button>
+          </div>
+        </div>
+
+        <div class="data-results">
+          <div class="panel-heading">
+            <span>拟合结果</span>
+            <span class="panel-tag" id="fitEquationTag">D² = bk + c</span>
+          </div>
+          <div class="fit-primary">
+            <span>曲率半径 R</span>
+            <div>
+              <strong id="radiusResult">—</strong>
+              <small>mm</small>
+            </div>
+            <p id="radiusUncertainty">标准不确定度 u(R) 待计算</p>
+          </div>
+          <div class="fit-chart-wrap">
+            <canvas id="fitCanvas" width="760" height="470" aria-label="D 平方与环序号的最小二乘拟合图"></canvas>
+            <div class="chart-grid" aria-hidden="true"></div>
+          </div>
+          <div class="fit-stat-grid">
+            <div><span>斜率 b</span><strong id="slopeResult">—</strong></div>
+            <div><span>截距 c</span><strong id="interceptResult">—</strong></div>
+            <div><span>拟合优度 R²</span><strong id="r2Result">—</strong></div>
+            <div><span>残差标准差</span><strong id="residualResult">—</strong></div>
+          </div>
+          <div class="fit-note" id="fitNote">
+            <span>Δ</span>
+            <p>曲率半径由 <i>R</i> = <i>b</i> / (4λ) 得到，其中 λ 已由 nm 换算为 mm。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quiz" class="section section-quiz observed-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">07 / PRE-LAB CHECK</p>
+          <h2>预习自测</h2>
+        </div>
+        <div class="quiz-progress-card" aria-live="polite">
+          <span>当前进度</span>
+          <strong id="quizProgressText">0 / 4</strong>
+          <div><i id="quizProgressBar"></i></div>
+        </div>
+      </div>
+
+      <form id="quizForm" class="quiz-layout" novalidate>
+        <div class="quiz-questions">
+          <fieldset class="quiz-question" data-question="q1" data-answer="a">
+            <legend><span>01</span>牛顿环属于哪一种干涉现象？</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="q1" value="a"><span>等厚干涉</span></label>
+              <label><input type="radio" name="q1" value="b"><span>等倾干涉</span></label>
+              <label><input type="radio" name="q1" value="c"><span>偏振干涉</span></label>
+              <label><input type="radio" name="q1" value="d"><span>衍射</span></label>
+            </div>
+            <p class="question-feedback" data-feedback></p>
+          </fieldset>
+
+          <fieldset class="quiz-question" data-question="q2" data-answer="c">
+            <legend><span>02</span>空气薄膜中心通常呈现暗斑，主要原因是什么？</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="q2" value="a"><span>中心薄膜最厚</span></label>
+              <label><input type="radio" name="q2" value="b"><span>中心没有反射光</span></label>
+              <label><input type="radio" name="q2" value="c"><span>半波损失造成相消干涉</span></label>
+              <label><input type="radio" name="q2" value="d"><span>中心发生全反射</span></label>
+            </div>
+            <p class="question-feedback" data-feedback></p>
+          </fieldset>
+
+          <fieldset class="quiz-question" data-question="q3" data-answer="a">
+            <legend><span>03</span>其他条件不变时，增大平凸透镜曲率半径 R，牛顿环会怎样变化？</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="q3" value="a"><span>环距变疏，外环位置向外移</span></label>
+              <label><input type="radio" name="q3" value="b"><span>环距变密，外环位置向外移</span></label>
+              <label><input type="radio" name="q3" value="c"><span>环距与位置都不变</span></label>
+              <label><input type="radio" name="q3" value="d"><span>条纹由同心环变为直条纹</span></label>
+            </div>
+            <p class="question-feedback" data-feedback></p>
+          </fieldset>
+
+          <fieldset class="quiz-question" data-question="q4" data-answer="d">
+            <legend><span>04</span>为提高曲率半径测量结果的可靠性，较合理的做法是？</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="q4" value="a"><span>只测中央暗斑的直径</span></label>
+              <label><input type="radio" name="q4" value="b"><span>只测一个清晰暗环的半径</span></label>
+              <label><input type="radio" name="q4" value="c"><span>沿不同方向反复测同一暗环，不拟合</span></label>
+              <label><input type="radio" name="q4" value="d"><span>测量多个暗环直径，拟合 D² 与 k 的直线</span></label>
+            </div>
+            <p class="question-feedback" data-feedback></p>
+          </fieldset>
+
+          <div class="quiz-submit-row">
+            <button class="button button-primary" type="submit">
+              提交选择题
+              <svg><use href="#icon-check"></use></svg>
+            </button>
+            <p id="quizScore">完成 4 道题后查看得分</p>
+          </div>
+        </div>
+
+        <aside class="reflection-panel">
+          <div class="reflection-heading">
+            <span>问答题</span>
+            <strong>05</strong>
+          </div>
+          <label for="reflectionAnswer">
+            <h3>牛顿环有哪些特征？</h3>
+            <p>可从条纹形状、明暗、疏密、中心现象和测量特征等方面作答。</p>
+          </label>
+          <textarea id="reflectionAnswer" rows="9" placeholder="在此记录你的答案……"></textarea>
+          <div class="reflection-footer">
+            <span id="answerCount">0 字</span>
+            <button id="showAnswerPoints" type="button" class="text-button">查看答题要点</button>
+          </div>
+          <div id="answerPoints" class="answer-points" hidden>
+            <strong>答题要点</strong>
+            <ul>
+              <li>条纹是以接触点为中心的同心圆环。</li>
+              <li>空气膜中心存在半波损失，通常形成暗斑。</li>
+              <li>条纹内疏外密，级次越高，环间距越小。</li>
+              <li>同一级暗环半径满足 <i>r</i><sub>k</sub>² ∝ <i>k</i>λ<i>R</i>。</li>
+              <li>增大曲率半径或降低介质折射率，同一级暗环向外扩展。</li>
+            </ul>
+          </div>
+        </aside>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-brand">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <div>
+        <strong>NEWTON LAB</strong>
+        <span>牛顿环薄膜干涉虚拟仿真实验平台</span>
+      </div>
+    </div>
+    <p>第十二届全国大学生物理实验竞赛 · 创新</p>
+    <a href="#overview">返回顶部</a>
+  </footer>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./libs/three.module.js"
+      }
+    }
+  </script>
+  <script src="./app.js"></script>
+</body>
+</html>

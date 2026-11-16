@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#dbe4e8">
+  <title>牛顿环智能实验平台 · 实时演示</title>
+  <meta name="description" content="编码器、机器视觉与实验过程数据融合的牛顿环智能实验平台">
+  <script>
+    if (new URLSearchParams(window.location.search).get("embed") === "1") {
+      document.documentElement.classList.add("innovation-embed");
+    }
+  </script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2319231f'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23dff0e9' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23dff0e9'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./innovation-demo.css?v=20261116-embed-v1">
+  <link rel="stylesheet" href="./innovation-demo-embed.css?v=20261116-embed-v1">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./libs/three.module.js"
+      }
+    }
+  </script>
+  <script src="./libs/lucide.min.js" defer></script>
+  <script src="./ring-detector.js?v=20261111-classic-student-v33" defer></script>
+  <script src="./innovation-demo-app.js?v=20261116-embed-v1" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="innovation-embed-tabs" aria-label="嵌入模块视图">
+      <button class="innovation-embed-tab active" type="button" data-go-view="live">实时演示</button>
+      <button class="innovation-embed-tab" type="button" data-go-view="process">过程档案</button>
+    </nav>
+    <aside class="app-rail" aria-label="主导航">
+      <div class="rail-brand" aria-label="牛顿环智能实验平台">
+        <span class="brand-symbol">N</span>
+        <span class="brand-word">Newton<br>Fusion</span>
+      </div>
+
+      <nav class="rail-nav">
+        <button class="nav-item active" type="button" data-view="live" title="实时测量">
+          <i data-lucide="scan-line" aria-hidden="true"></i>
+          <span>实时测量</span>
+        </button>
+        <button class="nav-item" type="button" data-view="analysis" title="数据分析">
+          <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>
+          <span>数据分析</span>
+        </button>
+        <button class="nav-item" type="button" data-view="process" title="过程档案">
+          <i data-lucide="history" aria-hidden="true"></i>
+          <span>过程档案</span>
+        </button>
+        <button class="nav-item" type="button" data-view="report" title="诊断报告">
+          <i data-lucide="sparkles" aria-hidden="true"></i>
+          <span>诊断报告</span>
+        </button>
+      </nav>
+
+      <div class="rail-bottom">
+        <button class="rail-icon" id="openSettingsBtn" type="button" title="设备与判读设置" aria-label="设备与判读设置">
+          <i data-lucide="settings-2" aria-hidden="true"></i>
+        </button>
+        <button class="rail-icon" id="openHelpBtn" type="button" title="接入说明" aria-label="接入说明">
+          <i data-lucide="circle-help" aria-hidden="true"></i>
+        </button>
+      </div>
+    </aside>
+
+    <div class="app-frame">
+      <header class="topbar">
+        <div class="title-group">
+          <h1>牛顿环实验平台</h1>
+        </div>
+
+        <div class="system-status" aria-label="设备状态">
+          <button class="status-chip" id="cameraStatusChip" type="button" data-open-settings="camera">
+            <span class="status-dot" id="cameraStatusDot"></span>
+            <i data-lucide="camera" aria-hidden="true"></i>
+            <span id="cameraStatusText">演示视野</span>
+          </button>
+          <button class="status-chip" id="encoderStatusChip" type="button" data-open-settings="encoder">
+            <span class="status-dot" id="encoderStatusDot"></span>
+            <i data-lucide="cpu" aria-hidden="true"></i>
+            <span id="encoderStatusText">模拟编码器</span>
+          </button>
+          <button class="status-chip" id="visionStatusChip" type="button" data-open-settings="vision">
+            <span class="status-dot" id="visionStatusDot"></span>
+            <i data-lucide="scan-eye" aria-hidden="true"></i>
+            <span id="visionStatusText">判读待命</span>
+          </button>
+          <span class="status-chip" id="storageStatusChip">
+            <span class="status-dot" id="storageStatusDot"></span>
+            <i data-lucide="database" aria-hidden="true"></i>
+            <span id="storageStatusText">本地记录</span>
+          </span>
+        </div>
+
+        <div class="top-actions">
+          <button class="session-clock" id="sessionPauseBtn" type="button" title="暂停或继续会话">
+            <i data-lucide="timer" aria-hidden="true"></i>
+            <span id="sessionTimer">00:00:00</span>
+          </button>
+          <button class="student-chip" id="studentChip" type="button" title="编辑实验者信息">
+            <span class="student-avatar">实</span>
+            <span>
+              <strong id="studentNameLabel">待填写实验者</strong>
+              <small id="groupLabel">未分配组别</small>
+            </span>
+            <i data-lucide="chevron-down" aria-hidden="true"></i>
+          </button>
+          <button class="primary-action compact" id="newSessionBtn" type="button">
+            <i data-lucide="plus" aria-hidden="true"></i>
+            <span>新建实验</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="app-view active" id="view-live" aria-labelledby="liveHeading">
+          <div class="view-heading">
+            <div>
+              <h2 id="liveHeading">实时测量</h2>
+            </div>
+            <div class="heading-actions">
+              <button class="ghost-button icon-only" id="loadDemoBtn" type="button" title="载入示例" aria-label="载入示例">
+                <i data-lucide="database-zap" aria-hidden="true"></i>
+              </button>
+              <button class="ghost-button icon-only" id="saveSessionBtn" type="button" title="保存会话" aria-label="保存会话">
+                <i data-lucide="save" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="live-console">
+            <div class="observation-column">
+              <section class="work-panel optical-panel">
+                <header class="panel-head">
+                  <div class="panel-title">
+                    <span class="panel-index">01</span>
+                    <div>
+                      <h3 id="opticPanelTitle">牛顿环演示视频</h3>
+                      <p>目镜画面、中央暗斑与全部暗环级次</p>
+                    </div>
+                  </div>
+                  <div class="panel-badges">
+                    <span class="mini-badge live" id="feedModeBadge">演示视频</span>
+                    <span class="mini-badge" id="freezeBadge">30 FPS</span>
+                  </div>
+                </header>
+
+                <div class="optical-stage" id="opticalStage">
+                  <video id="demoVideo" class="demo-video-source" src="./assets-core/demo/newton-rings-demo.mp4?v=20261116-screen-demo-v4" muted loop playsinline preload="auto" aria-hidden="true"></video>
+                  <canvas id="opticCanvas" width="1280" height="720" aria-label="牛顿环目镜演示视频"></canvas>
+                  <div class="stage-corner top-left">
+                    <span>CH 01 · EYEPIECE</span>
+                    <strong id="stageTimestamp">--:--:--.---</strong>
+                  </div>
+                  <div class="stage-corner top-right">
+                    <span>RAW / AUTO</span>
+                    <strong id="stageFrameInfo">1280 × 720</strong>
+                  </div>
+                  <div class="stage-detection-card">
+                    <div class="detection-head">
+                      <span>计数阶段 · <em id="stageSideLabel" data-side="center">左侧计数</em></span>
+                      <strong>m = <b id="stageRingOrder">1</b></strong>
+                    </div>
+                    <div class="detection-meta">
+                      <span><i data-lucide="crosshair" aria-hidden="true"></i><b id="stageCenter">--</b></span>
+                      <span><i data-lucide="badge-check" aria-hidden="true"></i><b id="stageConfidence">--</b></span>
+                    </div>
+                  </div>
+                  <div class="stage-tools">
+                    <button class="stage-tool" id="cameraToggleBtn" type="button" title="打开或关闭目镜摄像头">
+                      <i data-lucide="camera" aria-hidden="true"></i>
+                      <span>摄像头</span>
+                    </button>
+                    <button class="stage-tool" id="autoVisionBtn" type="button" title="沿整幅水平灰度带识别暗环谷值并跟踪标定线穿越">
+                      <i data-lucide="scan-search" aria-hidden="true"></i>
+                      <span>识别暗环</span>
+                    </button>
+                    <button class="stage-tool active" id="overlayToggleBtn" type="button" title="显示或隐藏识别叠加层与灰度曲线">
+                      <i data-lucide="layers-3" aria-hidden="true"></i>
+                      <span>叠加层</span>
+                    </button>
+                    <button class="stage-tool" id="freezeBtn" type="button" title="冻结或恢复画面">
+                      <i data-lucide="pause" aria-hidden="true"></i>
+                      <span>冻结</span>
+                    </button>
+                  </div>
+                  <div class="vision-progress" id="visionProgress" aria-hidden="true"><span></span></div>
+                </div>
+
+                <div class="gray-profile-panel" id="grayProfilePanel">
+                  <div class="gray-profile-head">
+                    <div class="gray-profile-title">
+                      <strong>水平灰度剖面</strong>
+                      <span id="grayProfileMeta">整幅水平灰度带 · 等待识别</span>
+                    </div>
+                    <div class="gray-profile-legend" aria-label="灰度曲线图例">
+                      <span class="raw">原始灰度</span>
+                      <span class="smoothed">平滑曲线</span>
+                      <span class="valley">暗环谷值</span>
+                      <span class="current">当前测量点</span>
+                    </div>
+                  </div>
+                  <div class="gray-canvas-wrap">
+                    <canvas id="grayCurveCanvas" width="900" height="190" aria-label="实时水平灰度曲线与暗环波谷"></canvas>
+                    <div class="gray-live-values" aria-label="实时灰度值">
+                      <span>G <strong id="grayCurrentValue">--</strong></span>
+                      <span>S <strong id="graySmoothedValue">--</strong></span>
+                      <span>R <strong id="grayRangeValue">--</strong></span>
+                      <span>X <strong id="graySamplePosition">--</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="optical-readout">
+                  <div>
+                    <span>灰度谷值</span>
+                    <strong id="opticConfidence">-- 谷</strong>
+                  </div>
+                  <div>
+                    <span>固定标定线</span>
+                    <strong id="opticOffset">--</strong>
+                  </div>
+                  <div>
+                    <span>判读耗时</span>
+                    <strong id="opticLatency">-- ms</strong>
+                  </div>
+                  <div>
+                    <span>图像状态</span>
+                    <strong class="good" id="opticImageState">正常</strong>
+                  </div>
+                </div>
+              </section>
+
+              <section class="work-panel encoder-panel">
+                <header class="panel-head asymmetric">
+                  <div class="panel-title">
+                    <span class="panel-index">02</span>
+                    <div>
+                      <h3>编码器同步读数</h3>
+                      <p>ESP8266 数据流与实验装置实时同步</p>
+                    </div>
+                  </div>
+                  <button class="icon-button" id="encoderSettingsBtn" type="button" title="编码器设置" aria-label="编码器设置">
+                    <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+                  </button>
+                </header>
+
+                <div class="encoder-start-row">
+                  <label for="startPositionInput">
+                    <span>起始读数位置</span>
+                    <span class="start-position-input">
+                      <input id="startPositionInput" type="number" min="0" max="50" step="0.0001" inputmode="decimal" value="25.0000">
+                      <small>mm</small>
+                    </span>
+                  </label>
+                  <button class="secondary-action" id="setStartPositionBtn" type="button">
+                    <i data-lucide="locate-fixed" aria-hidden="true"></i>
+                    定位到起点
+                  </button>
+                </div>
+                <p class="encoder-start-hint" id="startPositionHint">将当前编码器位置设为该起始读数</p>
+
+                <div class="encoder-sync-bar">
+                  <div class="encoder-sync-state">
+                    <span class="sync-dot" id="espSyncDot" aria-hidden="true"></span>
+                    <div>
+                      <strong id="espSyncStatus">等待连接</strong>
+                      <small id="espSyncAddress">输入 ESP8266 地址开始同步</small>
+                    </div>
+                  </div>
+                  <span class="sync-transport">SSE</span>
+                </div>
+
+                <div class="esp-connect-row">
+                  <input id="espHostInput" type="text" spellcheck="false" autocomplete="off" placeholder="ESP8266 地址或主机名">
+                  <button class="secondary-action" id="connectEspBtn" type="button">
+                    <i data-lucide="plug-zap" aria-hidden="true"></i>
+                    <span id="espConnectLabel">连接</span>
+                  </button>
+                </div>
+
+                <div class="encoder-visual">
+                  <canvas id="encoderDial" width="220" height="220" aria-label="编码器角度盘"></canvas>
+                  <div class="encoder-value">
+                    <span id="encoderAngle">129.42</span><small>°</small>
+                  </div>
+                  <span class="encoder-source" id="encoderSource">DEMO</span>
+                </div>
+
+                <div class="primary-reading">
+                  <span id="syncReadingLabel">同步读数</span>
+                  <strong><b id="positionReading">7.2831</b> <small>mm</small></strong>
+                  <em id="positionDelta">等待装置数据</em>
+                </div>
+
+                <div class="encoder-grid">
+                  <div><span id="rawValueLabel">原始计数</span><strong id="rawCount">14,821</strong></div>
+                  <div><span id="deviceMetaLabel">每转计数</span><strong id="countsPerRev">8,192</strong></div>
+                  <div><span>传输延迟</span><strong id="encoderLatency">18 ms</strong></div>
+                  <div><span>采样频率</span><strong id="sampleRate">50 Hz</strong></div>
+                </div>
+
+                <div class="inline-actions">
+                  <button class="secondary-action" id="zeroEncoderBtn" type="button">
+                    <i data-lucide="locate-fixed" aria-hidden="true"></i>
+                    起点归零
+                  </button>
+                  <button class="secondary-action" id="connectEncoderBtn" type="button">
+                    <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+                    高级接入
+                  </button>
+                </div>
+              </section>
+            </div>
+
+            <div class="simulation-column">
+              <section class="work-panel live-device-panel">
+                <header class="panel-head">
+                  <div class="panel-title">
+                    <span class="panel-index">03</span>
+                    <div>
+                      <h3>动画模拟模块</h3>
+                      <p>读数显微镜鼓轮、标尺与镜筒联动</p>
+                    </div>
+                  </div>
+                  <div class="live-model-head-metrics">
+                    <span>角度 <strong id="liveModelAngle">129.42°</strong></span>
+                    <span>读数 <strong id="liveModelPosition">25.367 mm</strong></span>
+                    <span class="mini-badge live" id="liveModelState">MODEL LOADING</span>
+                  </div>
+                </header>
+                <div class="live-device-stage">
+                  <canvas id="liveDeviceCanvas" aria-label="牛顿环整体实验装置三维模型"></canvas>
+                  <div class="model-loader" id="liveModelLoader">
+                    <span class="loader-ring"></span>
+                    <strong>正在载入完整装置</strong>
+                    <small>读数显微镜 + 牛顿环 + 钠光灯</small>
+                  </div>
+                  <div class="live-model-caption">
+                    <span><i data-lucide="move-horizontal" aria-hidden="true"></i>显微组件随读数横移</span>
+                    <span><i data-lucide="rotate-cw" aria-hidden="true"></i>鼓轮随编码器角度转动</span>
+                    <span><i data-lucide="ruler" aria-hidden="true"></i>鼓轮一周 = 主刻度一格</span>
+                  </div>
+                  <div class="live-model-reading">
+                    <span>模型实时读数</span>
+                    <strong><b id="liveStageReading">25.367</b><small>mm</small></strong>
+                    <em>主尺 <b id="liveMainScaleTicks">25</b> mm</em>
+                    <em>鼓轮 <b id="liveStageTick">36.7</b> × <b id="liveDrumDivision">0.01</b> mm</em>
+                    <em id="liveReadingFormula">起始 25.000 + 0.000 = 25.000 mm</em>
+                  </div>
+                  <div class="live-model-tools">
+                    <button class="stage-tool active" id="liveDemoMotionBtn" type="button" title="暂停或继续联动演示">
+                      <i data-lucide="play" aria-hidden="true"></i><span>暂停演示</span>
+                    </button>
+                    <button class="stage-tool" id="liveModelDrumBtn" type="button" title="俯视查看主尺与鼓轮刻度">
+                      <i data-lucide="scan" aria-hidden="true"></i><span>刻度俯视</span>
+                    </button>
+                    <button class="stage-tool" id="liveModelRotateBtn" type="button" title="自动旋转视角">
+                      <i data-lucide="orbit" aria-hidden="true"></i><span>旋转视角</span>
+                    </button>
+                    <button class="stage-tool" id="liveModelResetBtn" type="button" title="重置模型视角">
+                      <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>重置</span>
+                    </button>
+                    <a class="stage-tool" href="./device-viewer.html" target="_blank" rel="noopener" title="打开独立三维视图">
+                      <i data-lucide="maximize-2" aria-hidden="true"></i><span>全屏</span>
+                    </a>
+                  </div>
+                </div>
+                <div class="main-scale-strip">
+                  <div class="main-scale-strip-head">
+                    <span>固定主尺 · 随镜筒移动的红色标线</span>
+                    <strong id="mainScaleHeadValue">0.000 / 50.000 mm</strong>
+                  </div>
+                  <div class="main-scale-ruler-wrap">
+                    <canvas id="mainScaleRuler" width="900" height="76" aria-label="0 到 50 毫米固定主尺与随镜筒移动的红色读数标线"></canvas>
+                    <span class="main-scale-index" id="mainScaleIndex" aria-hidden="true"></span>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <aside class="live-data-column">
+              <section class="work-panel ring-summary-panel">
+                <header class="panel-head asymmetric">
+                  <div class="panel-title">
+                    <span class="panel-index accent">04</span>
+                    <div>
+                      <h3>暗环级数汇总</h3>
+                      <p>左侧由起始级递减到 1，跨过中央暗斑后，右侧由 1 递增回起始级</p>
+                    </div>
+                  </div>
+                  <span class="mini-badge amber" id="ringDetectionBadge">等待识别</span>
+                </header>
+
+                <div class="ring-summary-overview">
+                  <div>
+                    <span>识别</span>
+                    <strong id="ringDetectedCount">0</strong>
+                    <small>个暗环</small>
+                  </div>
+                  <div>
+                    <span>两侧完成</span>
+                    <strong id="ringRecordedCount">0</strong>
+                    <small>组两侧</small>
+                  </div>
+                  <div>
+                    <span>当前环</span>
+                    <strong id="ringActiveOrder">--</strong>
+                    <small>m</small>
+                  </div>
+                </div>
+
+                <div class="ring-summary-table-wrap">
+                  <table class="ring-summary-table">
+                    <thead>
+                      <tr>
+                        <th>环级</th>
+                        <th>左侧/mm</th>
+                        <th>右侧/mm</th>
+                        <th aria-label="操作"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="ringSummaryBody">
+                      <tr class="ring-summary-empty"><td colspan="4">识别暗环后自动记录对应级次的左右坐标</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="ring-summary-actions">
+                  <button class="primary-action compact" id="recordCurrentRingBtn" type="button">
+                    <i data-lucide="circle-dot" aria-hidden="true"></i>
+                    <span>重新开始计数</span>
+                  </button>
+                  <button class="icon-button" id="clearRingSummaryBtn" type="button" title="清空环级汇总" aria-label="清空环级汇总">
+                    <i data-lucide="trash-2" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </section>
+
+              <section class="work-panel fusion-panel">
+                <header class="panel-head asymmetric">
+                  <div class="panel-title">
+                    <span class="panel-index accent">05</span>
+                    <div>
+                      <h3>测量融合</h3>
+                      <p>左侧递减至 1，跳过中央暗斑，右侧从 1 开始递增</p>
+                    </div>
+                  </div>
+                  <span class="mini-badge amber" id="fusionStatus">等待左测点</span>
+                </header>
+
+                <div class="ring-order-row">
+                  <span>起始级数</span>
+                  <div class="stepper">
+                    <button type="button" id="ringMinusBtn" title="减小起始级数" aria-label="减小起始级数"><i data-lucide="minus"></i></button>
+                    <strong>m = <input id="ringOrderInput" type="number" value="1" min="1" max="80" inputmode="numeric"></strong>
+                    <button type="button" id="ringPlusBtn" title="增大起始级数" aria-label="增大起始级数"><i data-lucide="plus"></i></button>
+                  </div>
+                  <span class="confidence-pill" id="ringConfidence">93.6%</span>
+                </div>
+
+                <div class="capture-slots">
+                  <button class="capture-slot waiting" id="leftSlot" type="button">
+                    <span class="slot-label"><i data-lucide="arrow-left-to-line" aria-hidden="true"></i>左侧测点</span>
+                    <strong id="leftSlotValue">未记录</strong>
+                    <small id="leftSlotTime">等待捕获</small>
+                  </button>
+                  <button class="capture-slot waiting" id="rightSlot" type="button">
+                    <span class="slot-label"><i data-lucide="arrow-right-to-line" aria-hidden="true"></i>右侧测点</span>
+                    <strong id="rightSlotValue">未记录</strong>
+                    <small id="rightSlotTime">等待捕获</small>
+                  </button>
+                </div>
+
+                <div class="capture-actions">
+                  <button class="capture-button left" id="captureLeftBtn" type="button">
+                    <i data-lucide="circle-arrow-left" aria-hidden="true"></i>
+                    <span>记录左侧</span>
+                    <kbd>Q</kbd>
+                  </button>
+                  <button class="capture-button right" id="captureRightBtn" type="button">
+                    <i data-lucide="circle-arrow-right" aria-hidden="true"></i>
+                    <span>记录右侧</span>
+                    <kbd>E</kbd>
+                  </button>
+                </div>
+
+                <div class="pair-result" id="pairResult">
+                  <div>
+                    <span>直径 D</span>
+                    <strong id="diameterResult">--</strong>
+                  </div>
+                  <div>
+                    <span>D²</span>
+                    <strong id="diameterSquaredResult">--</strong>
+                  </div>
+                  <div>
+                    <span>配对环级</span>
+                    <strong id="pairedOrderResult">--</strong>
+                  </div>
+                </div>
+              </section>
+            </aside>
+          </div>
+
+          <aside class="session-side">
+              <section class="session-summary">
+                <div class="session-head">
+                  <div>
+                    <span class="section-kicker">SESSION</span>
+                    <h3 id="sessionCode">NR-20261028-01</h3>
+                  </div>
+                  <button class="icon-button" id="sessionSettingsBtn" type="button" title="实验参数" aria-label="实验参数">
+                    <i data-lucide="settings" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div class="session-progress">
+                  <div class="progress-meta">
+                    <span>有效配对</span>
+                    <strong><b id="pairCount">0</b> / 10</strong>
+                  </div>
+                  <div class="progress-track"><span id="pairProgress"></span></div>
+                </div>
+                <dl class="session-facts">
+                  <div><dt>波长</dt><dd id="lambdaLabel">589.3 nm</dd></div>
+                  <div><dt>参考 R</dt><dd id="referenceRLabel">1.000 m</dd></div>
+                  <div><dt>螺距</dt><dd id="pitchLabel">1.000 mm/rev</dd></div>
+                  <div><dt>运行模式</dt><dd id="runtimeModeLabel">演示会话</dd></div>
+                </dl>
+              </section>
+
+              <section class="quick-diagnosis">
+                <div class="quick-head">
+                  <i data-lucide="sparkles" aria-hidden="true"></i>
+                  <div>
+                    <span>AI 快速诊断</span>
+                    <strong id="quickDiagnosisTitle">等待实验数据</strong>
+                  </div>
+                </div>
+                <p id="quickDiagnosisText">完成左右测点配对后，将自动检查线性、残差、联动延迟与环级置信度。</p>
+                <button class="text-button" type="button" data-go-view="report">
+                  查看完整诊断
+                  <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+                </button>
+              </section>
+
+              <section class="activity-panel">
+                <header class="activity-head">
+                  <div>
+                    <span class="section-kicker">TRACE</span>
+                    <h3>操作时间线</h3>
+                  </div>
+                  <button class="icon-button small" id="clearTraceBtn" type="button" title="清空当前轨迹" aria-label="清空当前轨迹">
+                    <i data-lucide="trash-2" aria-hidden="true"></i>
+                  </button>
+                </header>
+                <ol class="activity-list" id="activityList"></ol>
+              </section>
+            </aside>
+        </section>
+
+        <section class="app-view" id="view-analysis" aria-labelledby="analysisHeading">
+          <div class="view-heading">
+            <div>
+              <span class="section-kicker">MEASUREMENT ANALYSIS / 数据核算</span>
+              <h2 id="analysisHeading">最小二乘拟合与误差证据</h2>
+            </div>
+            <div class="heading-actions">
+              <button class="ghost-button" id="recalculateBtn" type="button">
+                <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                重新计算
+              </button>
+              <button class="ghost-button" id="exportCsvBtn" type="button">
+                <i data-lucide="download" aria-hidden="true"></i>
+                导出 CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="metric-band">
+            <div class="metric-cell">
+              <span>测得曲率半径 R</span>
+              <strong id="fitRMetric">--</strong>
+              <small id="fitRUnit">m</small>
+            </div>
+            <div class="metric-cell">
+              <span>与参考值偏差</span>
+              <strong id="fitErrorMetric">--</strong>
+              <small id="fitErrorNote">等待拟合</small>
+            </div>
+            <div class="metric-cell">
+              <span>线性拟合优度 R²</span>
+              <strong id="fitR2Metric">--</strong>
+              <small id="fitR2Note">D² = a·m + b</small>
+            </div>
+            <div class="metric-cell">
+              <span>有效数据</span>
+              <strong id="fitNMetric">0</strong>
+              <small id="fitNNote">组左右配对</small>
+            </div>
+          </div>
+
+          <div class="analysis-grid">
+            <section class="work-panel fit-panel">
+              <header class="panel-head">
+                <div class="panel-title">
+                  <span class="panel-index">01</span>
+                  <div>
+                    <h3>D² 与环级 m 的线性关系</h3>
+                    <p>斜率 a = 4Rλ，截距用于吸收中心接触与零点偏移</p>
+                  </div>
+                </div>
+                <span class="formula-badge">D² = a·m + b</span>
+              </header>
+              <div class="chart-stage">
+                <canvas id="fitChart" width="900" height="460" aria-label="最小二乘拟合图"></canvas>
+                <div class="chart-empty" id="fitChartEmpty">
+                  <i data-lucide="chart-spline" aria-hidden="true"></i>
+                  <span>至少需要 2 组左右测点</span>
+                </div>
+              </div>
+              <div class="fit-equation" id="fitEquation">等待有效配对数据</div>
+            </section>
+
+            <section class="work-panel parameter-panel">
+              <header class="panel-head asymmetric">
+                <div class="panel-title">
+                  <span class="panel-index">02</span>
+                  <div>
+                    <h3>计算条件</h3>
+                    <p>修改后立即重算</p>
+                  </div>
+                </div>
+              </header>
+              <div class="parameter-form">
+                <label>
+                  <span>光源波长</span>
+                  <span class="input-with-unit">
+                    <input id="wavelengthInput" type="number" min="350" max="800" step="0.1" value="589.3">
+                    <em>nm</em>
+                  </span>
+                </label>
+                <label>
+                  <span>参考曲率半径</span>
+                  <span class="input-with-unit">
+                    <input id="referenceRInput" type="number" min="0.01" step="0.001" value="1.000">
+                    <em>m</em>
+                  </span>
+                </label>
+                <label>
+                  <span>拟合方式</span>
+                  <select id="fitModeSelect">
+                    <option value="intercept">含截距线性拟合</option>
+                    <option value="origin">过原点拟合</option>
+                  </select>
+                </label>
+                <label>
+                  <span>残差告警阈值</span>
+                  <span class="input-with-unit">
+                    <input id="residualThresholdInput" type="number" min="0.5" max="10" step="0.5" value="2.5">
+                    <em>σ</em>
+                  </span>
+                </label>
+              </div>
+              <div class="fit-stats">
+                <div><span>斜率 a</span><strong id="slopeStat">--</strong></div>
+                <div><span>截距 b</span><strong id="interceptStat">--</strong></div>
+                <div><span>回归标准差</span><strong id="residualStdStat">--</strong></div>
+                <div><span>R 合成不确定度</span><strong id="fitUncertaintyStat">--</strong></div>
+              </div>
+            </section>
+          </div>
+
+          <div class="analysis-bottom">
+            <section class="work-panel data-table-panel">
+              <header class="panel-head">
+                <div class="panel-title">
+                  <span class="panel-index">03</span>
+                  <div>
+                    <h3>配对测量表</h3>
+                    <p>每次测点均保留编码器原始值、换算值和判读置信度</p>
+                  </div>
+                </div>
+                <span class="mini-badge" id="tableCountBadge">0 PAIRS</span>
+              </header>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>环级 m</th>
+                      <th>左读数 / mm</th>
+                      <th>右读数 / mm</th>
+                      <th>D / mm</th>
+                      <th>D² / mm²</th>
+                      <th>拟合值</th>
+                      <th>残差</th>
+                      <th>置信度</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pairTableBody"></tbody>
+                </table>
+                <div class="table-empty" id="pairTableEmpty">尚无配对数据</div>
+              </div>
+              <div class="table-footer">
+                <span>原始记录同时保存于本次实验的 JSON 档案</span>
+                <button class="text-button" id="exportJsonBtn" type="button">
+                  导出完整会话
+                  <i data-lucide="file-json-2" aria-hidden="true"></i>
+                </button>
+              </div>
+            </section>
+
+            <section class="evidence-panel">
+              <div class="evidence-head">
+                <span class="section-kicker">EVIDENCE</span>
+                <h3>误差证据</h3>
+              </div>
+              <div class="evidence-list" id="evidenceList"></div>
+            </section>
+          </div>
+
+          <section class="work-panel student-data-panel">
+            <header class="panel-head">
+              <div class="panel-title">
+                <div>
+                  <h3>学生与平台逐环对照</h3>
+                </div>
+              </div>
+              <span class="mini-badge" id="studentCompareBadge">0 / 0 已录入</span>
+            </header>
+            <div class="student-compare-table-wrap">
+              <table class="student-compare-table">
+                <thead>
+                  <tr>
+                    <th>环级 m</th>
+                    <th>学生左读数</th>
+                    <th>学生右读数</th>
+                    <th>平台左读数</th>
+                    <th>平台右读数</th>
+                    <th>左差值</th>
+                    <th>右差值</th>
+                    <th>学生 D</th>
+                    <th>平台 D</th>
+                    <th>D 差值</th>
+                  </tr>
+                </thead>
+                <tbody id="studentCompareBody">
+                  <tr class="student-compare-empty"><td colspan="10">录入学生左右读数后自动对照</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="app-view" id="view-process" aria-labelledby="processHeading">
+          <div class="view-heading">
+            <div>
+              <span class="section-kicker">PROCESS ARCHIVE / 过程档案</span>
+              <h2 id="processHeading">从操作到数据的完整留痕</h2>
+            </div>
+            <button class="ghost-button" id="exportSessionBtn" type="button">
+              <i data-lucide="archive" aria-hidden="true"></i>
+              导出实验档案
+            </button>
+          </div>
+
+          <section class="work-panel encoder-process-panel" aria-labelledby="encoderMonitorTitle">
+            <header class="panel-head">
+              <div class="panel-title">
+                <span class="panel-index">00</span>
+                <div>
+                  <h3 id="encoderMonitorTitle">编码器实时采样</h3>
+                  <p>位移、原始计数、角度与采样间隔持续记录</p>
+                </div>
+              </div>
+              <span class="mini-badge live" id="encoderMonitorBadge">LIVE SAMPLING</span>
+            </header>
+
+            <div class="encoder-process-stats">
+              <div class="current"><span>当前位移</span><strong id="encoderMonitorCurrent">--</strong><small>mm</small></div>
+              <div><span>原始计数</span><strong id="encoderMonitorRaw">--</strong><small>counts</small></div>
+              <div><span>编码器角度</span><strong id="encoderMonitorAngle">--</strong><small>°</small></div>
+              <div><span>最小值</span><strong id="encoderMonitorMin">--</strong><small>mm</small></div>
+              <div><span>最大值</span><strong id="encoderMonitorMax">--</strong><small>mm</small></div>
+              <div><span>采样点</span><strong id="encoderMonitorCount">0</strong><small id="encoderMonitorInterval">-- ms</small></div>
+            </div>
+
+            <div class="encoder-history-chart-wrap">
+              <canvas id="encoderHistoryChart" width="1200" height="300" aria-label="编码器位移实时采样曲线"></canvas>
+              <div class="encoder-history-empty" id="encoderHistoryEmpty">等待编码器采样数据</div>
+            </div>
+
+            <div class="encoder-process-toolbar">
+              <div>
+                <button class="ghost-button" id="pauseEncoderHistoryBtn" type="button">
+                  <i data-lucide="pause" aria-hidden="true"></i>
+                  <span>暂停采样</span>
+                </button>
+                <button class="ghost-button" id="clearEncoderHistoryBtn" type="button">
+                  <i data-lucide="trash-2" aria-hidden="true"></i>
+                  清空曲线
+                </button>
+              </div>
+              <div>
+                <button class="ghost-button" id="exportEncoderSnapshotBtn" type="button">
+                  <i data-lucide="file-json-2" aria-hidden="true"></i>
+                  导出快照
+                </button>
+                <button class="primary-action compact" id="exportEncoderCsvBtn" type="button">
+                  <i data-lucide="download" aria-hidden="true"></i>
+                  导出 CSV
+                </button>
+              </div>
+            </div>
+
+            <div class="encoder-history-table-wrap">
+              <table class="encoder-history-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>本地时间</th>
+                    <th>位移 / mm</th>
+                    <th>原始计数</th>
+                    <th>角度 / °</th>
+                    <th>延迟 / ms</th>
+                  </tr>
+                </thead>
+                <tbody id="encoderHistoryBody"></tbody>
+              </table>
+              <div class="encoder-history-empty" id="encoderHistoryTableEmpty">暂无实时采样记录</div>
+            </div>
+          </section>
+
+          <div class="process-layout">
+            <section class="work-panel timeline-panel">
+              <header class="panel-head">
+                <div class="panel-title">
+                  <span class="panel-index">01</span>
+                  <div>
+                    <h3>实验事件流</h3>
+                    <p>操作、判读、编码器与配对事件统一编号</p>
+                  </div>
+                </div>
+                <span class="mini-badge" id="eventCountBadge">0 EVENTS</span>
+              </header>
+              <ol class="full-timeline" id="fullTimeline"></ol>
+            </section>
+
+            <aside class="process-side">
+              <section class="work-panel capture-archive-panel">
+                <header class="panel-head asymmetric">
+                  <div class="panel-title">
+                    <span class="panel-index">02</span>
+                    <div>
+                      <h3>测点快照</h3>
+                      <p>最近 6 个绑定帧</p>
+                    </div>
+                  </div>
+                </header>
+                <div class="snapshot-grid" id="snapshotGrid"></div>
+              </section>
+
+              <section class="session-meta-panel">
+                <div class="session-meta-head">
+                  <span class="section-kicker">SESSION META</span>
+                  <button class="text-button" id="editSessionMetaBtn" type="button">
+                    编辑
+                    <i data-lucide="pencil" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <dl>
+                  <div><dt>实验编号</dt><dd id="metaSessionCode">--</dd></div>
+                  <div><dt>实验者</dt><dd id="metaStudent">--</dd></div>
+                  <div><dt>组别</dt><dd id="metaGroup">--</dd></div>
+                  <div><dt>透镜编号</dt><dd id="metaLens">--</dd></div>
+                  <div><dt>开始时间</dt><dd id="metaStartedAt">--</dd></div>
+                  <div><dt>数据版本</dt><dd id="metaVersion">fusion-1.0</dd></div>
+                </dl>
+              </section>
+
+              <section class="work-panel archive-panel">
+                <header class="panel-head asymmetric">
+                  <div class="panel-title">
+                    <span class="panel-index">03</span>
+                    <div>
+                      <h3>历史实验档案</h3>
+                      <p>来自本地 platform_server 的记录</p>
+                    </div>
+                  </div>
+                  <button class="icon-button" id="refreshArchiveBtn" type="button" title="刷新档案列表" aria-label="刷新档案列表">
+                    <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                  </button>
+                </header>
+                <div class="archive-list" id="backendArchiveList">
+                  <div class="archive-empty">正在检查档案服务</div>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="app-view" id="view-device" aria-labelledby="deviceHeading">
+          <div class="view-heading device-heading">
+            <div>
+              <span class="section-kicker">DIGITAL TWIN / 数字装置</span>
+              <h2 id="deviceHeading">装置整体模型与硬件映射</h2>
+            </div>
+            <div class="heading-actions">
+                <span class="model-source-badge">
+                <i data-lucide="file-box" aria-hidden="true"></i>
+                  机械分组 · device-merged.blend
+              </span>
+              <a class="ghost-button" href="./device-viewer.html" target="_blank" rel="noopener">
+                <i data-lucide="maximize-2" aria-hidden="true"></i>
+                独立查看
+              </a>
+            </div>
+          </div>
+
+          <div class="device-layout">
+            <section class="model-viewport">
+              <canvas id="deviceCanvas" aria-label="装置三维模型"></canvas>
+              <div class="model-loader" id="modelLoader">
+                <span class="loader-ring"></span>
+                <strong>正在载入装置模型</strong>
+                <small>28.2 MB · 机械分组模型</small>
+              </div>
+              <div class="model-toolbar">
+                <button class="stage-tool" id="modelResetBtn" type="button" title="重置视角">
+                  <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>重置视角</span>
+                </button>
+                <button class="stage-tool active" id="modelRotateBtn" type="button" title="自动旋转">
+                  <i data-lucide="orbit" aria-hidden="true"></i><span>自动旋转</span>
+                </button>
+                <button class="stage-tool" id="modelLampBtn" type="button" title="聚焦钠光灯">
+                  <i data-lucide="lightbulb" aria-hidden="true"></i><span>聚焦钠灯</span>
+                </button>
+              </div>
+              <div class="model-hint">
+                <i data-lucide="mouse-pointer-2" aria-hidden="true"></i>
+                拖动旋转 · 滚轮缩放 · 右键平移
+              </div>
+            </section>
+
+            <aside class="hardware-map">
+              <div class="hardware-head">
+                <span class="section-kicker">HARDWARE MAP</span>
+                <h3>从物理装置到平台字段</h3>
+                <p>模型节点与实时数据源保持一一映射。</p>
+              </div>
+              <div class="hardware-chain">
+                <article>
+                  <span class="chain-index">A</span>
+                  <div>
+                    <strong>读数显微镜</strong>
+                    <p>编码器采集鼓轮转动，平台换算为毫米位置。</p>
+                    <span class="mapping-tag">Micrometer → encoder.raw</span>
+                  </div>
+                </article>
+                <article>
+                  <span class="chain-index">B</span>
+                  <div>
+                    <strong>目镜摄像头</strong>
+                    <p>十字叉丝与牛顿环帧绑定当前环级和置信度。</p>
+                    <span class="mapping-tag">Eyepiece → vision.ringOrder</span>
+                  </div>
+                </article>
+                <article>
+                  <span class="chain-index amber">C</span>
+                  <div>
+                    <strong>钠光灯</strong>
+                    <p>已替换为 U 形暖黄色放电灯管，对应 589.3 nm 光源。</p>
+                    <span class="mapping-tag">SodiumLamp → session.wavelength</span>
+                  </div>
+                </article>
+                <article>
+                  <span class="chain-index blue">D</span>
+                  <div>
+                    <strong>实验会话</strong>
+                    <p>左右测点、图像快照和拟合结果存入同一数据档案。</p>
+                    <span class="mapping-tag">Session → measurement.pairs</span>
+                  </div>
+                </article>
+              </div>
+              <div class="model-legend">
+                <span><i class="legend-dot green"></i>编码器在线</span>
+                <span><i class="legend-dot amber"></i>光源已建模</span>
+                <span><i class="legend-dot blue"></i>摄像头绑定</span>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="app-view" id="view-report" aria-labelledby="reportHeading">
+          <div class="view-heading">
+            <div>
+              <span class="section-kicker">AI DIAGNOSIS / 诊断报告</span>
+              <h2 id="reportHeading">基于真实测量证据的实验诊断</h2>
+            </div>
+            <div class="heading-actions">
+              <button class="ghost-button" id="refreshReportBtn" type="button">
+                <i data-lucide="sparkles" aria-hidden="true"></i>
+                重新生成
+              </button>
+              <button class="ghost-button" id="printReportBtn" type="button">
+                <i data-lucide="printer" aria-hidden="true"></i>
+                打印
+              </button>
+              <button class="primary-action" id="downloadReportBtn" type="button">
+                <i data-lucide="file-down" aria-hidden="true"></i>
+                下载报告
+              </button>
+            </div>
+          </div>
+
+          <div class="report-layout">
+            <article class="report-paper" id="reportPaper">
+              <header class="report-paper-head">
+                <div>
+                  <span>NEWTON'S RINGS · EXPERIMENT DIAGNOSIS</span>
+                  <h2>牛顿环实验过程与结果诊断报告</h2>
+                </div>
+                <div class="report-id">
+                  <span>报告编号</span>
+                  <strong id="reportId">--</strong>
+                </div>
+              </header>
+              <section class="report-meta">
+                <div><span>实验者</span><strong id="reportStudent">--</strong></div>
+                <div><span>组别</span><strong id="reportGroup">--</strong></div>
+                <div><span>实验日期</span><strong id="reportDate">--</strong></div>
+                <div><span>装置编号</span><strong id="reportDevice">NR-FUSION-01</strong></div>
+              </section>
+              <section class="report-section report-summary-section">
+                <h3><span>01</span> 实验摘要</h3>
+                <p id="reportSummary">等待有效测量数据。</p>
+                <div class="report-metrics">
+                  <div><span>测得 R</span><strong id="reportR">--</strong></div>
+                  <div><span>相对偏差</span><strong id="reportError">--</strong></div>
+                  <div><span>拟合优度</span><strong id="reportR2">--</strong></div>
+                  <div><span>有效配对</span><strong id="reportN">--</strong></div>
+                </div>
+              </section>
+              <section class="report-section report-data-section">
+                <h3><span>02</span> 数据与拟合</h3>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>m</th><th>左读数 mm</th><th>右读数 mm</th><th>D mm</th><th>D² mm²</th><th>残差</th></tr>
+                    </thead>
+                    <tbody id="reportTableBody"></tbody>
+                  </table>
+                </div>
+                <p class="report-formula" id="reportFormula">D² = a·m + b；R = a / (4λ)</p>
+              </section>
+              <section class="report-section report-ai-section">
+                <h3><span>03</span> AI 诊断结论</h3>
+                <div class="report-findings" id="reportFindings"></div>
+              </section>
+              <section class="report-section report-quality-section">
+                <h3><span>04</span> 过程质量</h3>
+                <div class="quality-grid" id="reportQuality"></div>
+              </section>
+              <section class="report-section report-student-section">
+                <h3><span>05</span> 学生数据对照</h3>
+                <div class="student-compare-grid">
+                  <div><span>平台拟合 R</span><strong id="reportAutoR">--</strong></div>
+                  <div><span>学生核算 R</span><strong id="reportStudentR">--</strong></div>
+                  <div><span>两者差值</span><strong id="reportCompareDiff">--</strong></div>
+                  <div><span>对照结论</span><strong id="reportCompareState">--</strong></div>
+                </div>
+                <p class="student-compare-text" id="reportCompareText">尚未录入学生手工核算结果。</p>
+              </section>
+              <section class="report-section report-recommendations-section">
+                <h3><span>06</span> 建议与改进</h3>
+                <ul class="report-recommendations" id="reportRecommendations"></ul>
+              </section>
+              <footer class="report-footer">
+                <p>本报告由平台依据编码器原始计数、视觉判读结果与配对测量记录自动生成。AI 诊断仅提供实验质量线索，不替代人工复核。</p>
+                <span id="reportGeneratedAt">--</span>
+              </footer>
+            </article>
+
+            <aside class="diagnosis-side">
+              <section class="diagnosis-score">
+                <span class="section-kicker">QUALITY SCORE</span>
+                <div class="score-ring" id="scoreRing">
+                  <strong id="qualityScore">--</strong>
+                  <span>实验质量</span>
+                </div>
+                <p id="scoreSummary">完成测量后生成评分。</p>
+              </section>
+              <section class="diagnosis-summary">
+                <div class="diagnosis-summary-head">
+                  <span class="section-kicker">FINDINGS</span>
+                  <strong id="findingCount">0</strong>
+                </div>
+                <div id="sideFindings"></div>
+              </section>
+              <section class="manual-compare">
+                <div class="manual-compare-head">
+                  <span class="section-kicker">STUDENT CHECK</span>
+                  <strong>学生核算对照</strong>
+                </div>
+                <label>
+                  <span>学生测得 R / m</span>
+                  <input id="studentResultInput" type="number" min="0.001" step="0.0001" placeholder="例如 0.9940">
+                </label>
+                <label>
+                  <span>不确定度 u(R) / m</span>
+                  <input id="studentUncertaintyInput" type="number" min="0" step="0.0001" placeholder="可选">
+                </label>
+                <label>
+                  <span>核算方法</span>
+                  <select id="studentMethodInput">
+                    <option value="逐差法">逐差法</option>
+                    <option value="最小二乘法">最小二乘法</option>
+                    <option value="作图法">作图法</option>
+                    <option value="其他">其他</option>
+                  </select>
+                </label>
+                <button class="secondary-action full" id="saveStudentComparisonBtn" type="button">
+                  <i data-lucide="git-compare-arrows" aria-hidden="true"></i>
+                  更新对照
+                </button>
+                <p id="studentComparisonSideText">录入学生结果后，平台会检查两种核算是否一致。</p>
+              </section>
+              <section class="diagnosis-note">
+                <i data-lucide="shield-check" aria-hidden="true"></i>
+                <div>
+                  <strong>可追溯原则</strong>
+                  <p>诊断文本只引用已保存的数值、时间戳与视觉置信度。原始读数不会被 AI 改写。</p>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="settings-dialog" id="settingsDialog">
+    <form method="dialog" class="dialog-shell" id="settingsForm">
+      <header class="dialog-head">
+        <div>
+          <span class="section-kicker">HARDWARE CONFIG</span>
+          <h2>装置与判读设置</h2>
+          <p>参数保存到本机浏览器，不改变原始测量记录。</p>
+        </div>
+        <button class="icon-button" value="cancel" type="submit" title="关闭" aria-label="关闭">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="settings-layout">
+        <section class="settings-section">
+          <div class="settings-section-head">
+            <span class="settings-number">01</span>
+            <div>
+              <h3>编码器接入</h3>
+              <p>支持浏览器 WebSocket 或 Chrome/Edge 串口。</p>
+            </div>
+          </div>
+          <label class="field">
+            <span>WebSocket 地址</span>
+            <input id="wsUrlInput" type="text" value="ws://127.0.0.1:8765" spellcheck="false">
+          </label>
+          <div class="field-pair">
+            <button class="secondary-action" id="wsConnectBtn" type="button">
+              <i data-lucide="radio-tower" aria-hidden="true"></i>
+              连接 WebSocket
+            </button>
+            <button class="secondary-action" id="serialConnectBtn" type="button">
+              <i data-lucide="usb" aria-hidden="true"></i>
+              连接 USB 串口
+            </button>
+          </div>
+          <p class="field-help" id="hardwareHelpText">当前使用内置演示信号。连接真实设备后将自动切换到实时数据。</p>
+        </section>
+
+        <section class="settings-section">
+          <div class="settings-section-head">
+            <span class="settings-number">02</span>
+            <div>
+              <h3>编码器标定</h3>
+              <p>连接后首帧设为 0 点，读数 = 起始读数 + 方向 × 计数比例 × 螺距。</p>
+            </div>
+          </div>
+          <div class="field-grid">
+            <label class="field">
+              <span>每转计数</span>
+              <input id="countsPerRevInput" type="number" min="1" step="1" value="8192">
+            </label>
+            <label class="field">
+              <span>螺距 / mm·转⁻¹</span>
+                <input id="pitchInput" type="number" min="0.001" step="0.001" value="1.000">
+            </label>
+            <label class="field">
+              <span>方向</span>
+              <select id="directionInput">
+                <option value="1">正向</option>
+                <option value="-1">反向</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>零点补偿 / mm</span>
+              <input id="zeroOffsetInput" type="number" step="0.0001" value="0.0000">
+            </label>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="settings-section-head">
+            <span class="settings-number">03</span>
+            <div>
+              <h3>视觉判读</h3>
+              <p>本地水平灰度带波谷连续计数无需服务；此处保留外部 `/api/analyze` 兼容配置。</p>
+            </div>
+          </div>
+          <label class="field">
+            <span>判读服务地址</span>
+            <input id="visionUrlInput" type="text" value="http://127.0.0.1:18080/api/analyze" spellcheck="false">
+          </label>
+          <div class="field-grid">
+            <label class="field">
+              <span>左侧第一个暗环级数</span>
+              <input id="ringBaseInput" type="number" min="1" max="80" step="1" value="1">
+            </label>
+            <label class="field">
+              <span>自动识别与记录</span>
+              <select id="visionIntervalInput">
+                <option value="0">仅手动触发</option>
+                <option value="0.1">每 0.1 秒（精细）</option>
+                <option value="0.3">每 0.3 秒</option>
+                <option value="0.8">每 0.8 秒</option>
+                <option value="2">每 2 秒</option>
+                <option value="5">每 5 秒</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>摄像头方向</span>
+              <select id="cameraRotationInput">
+                <option value="-90">逆时针 90°</option>
+                <option value="0">不旋转</option>
+                <option value="90">顺时针 90°</option>
+                <option value="180">旋转 180°</option>
+              </select>
+            </label>
+          </div>
+          <button class="secondary-action full" id="testVisionBtn" type="button">
+            <i data-lucide="activity" aria-hidden="true"></i>
+            测试判读服务
+          </button>
+        </section>
+      </div>
+
+      <footer class="dialog-foot">
+        <div class="dialog-note">
+          <i data-lucide="info" aria-hidden="true"></i>
+          <span>真实设备接入后，演示信号会自动停止。</span>
+        </div>
+        <div class="dialog-actions">
+          <button class="ghost-button" value="cancel" type="submit">取消</button>
+          <button class="primary-action" id="saveSettingsBtn" value="default" type="submit">
+            <i data-lucide="check" aria-hidden="true"></i>
+            保存设置
+          </button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog class="settings-dialog smaller" id="sessionDialog">
+    <form method="dialog" class="dialog-shell" id="sessionForm">
+      <header class="dialog-head">
+        <div>
+          <span class="section-kicker">EXPERIMENT SESSION</span>
+          <h2>新建实验会话</h2>
+          <p>会话信息将写入过程档案和诊断报告。</p>
+        </div>
+        <button class="icon-button" value="cancel" type="submit" title="关闭" aria-label="关闭">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </header>
+      <div class="settings-layout single">
+        <section class="settings-section">
+          <div class="field-grid">
+            <label class="field">
+              <span>实验者</span>
+              <input id="studentNameInput" type="text" value="" placeholder="请输入姓名">
+            </label>
+            <label class="field">
+              <span>组别</span>
+              <input id="groupInput" type="text" value="" placeholder="例如：第 03 组">
+            </label>
+            <label class="field">
+              <span>透镜编号</span>
+              <input id="lensInput" type="text" value="L-01" placeholder="L-01">
+            </label>
+            <label class="field">
+              <span>装置编号</span>
+              <input id="deviceIdInput" type="text" value="NR-FUSION-01">
+            </label>
+            <label class="field">
+              <span>光源波长 / nm</span>
+              <input id="sessionWavelengthInput" type="number" min="350" max="800" step="0.1" value="589.3">
+            </label>
+            <label class="field">
+              <span>参考曲率半径 / m</span>
+              <input id="sessionReferenceRInput" type="number" min="0.01" step="0.001" value="1.000">
+            </label>
+          </div>
+        </section>
+      </div>
+      <footer class="dialog-foot">
+        <div class="dialog-note">
+          <i data-lucide="history" aria-hidden="true"></i>
+          <span>新建会话会清空当前未导出数据。</span>
+        </div>
+        <div class="dialog-actions">
+          <button class="ghost-button" value="cancel" type="submit">取消</button>
+          <button class="primary-action" id="createSessionBtn" value="default" type="submit">
+            <i data-lucide="play" aria-hidden="true"></i>
+            开始实验
+          </button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog class="settings-dialog smaller" id="helpDialog">
+    <form method="dialog" class="dialog-shell">
+      <header class="dialog-head">
+        <div>
+          <span class="section-kicker">INTEGRATION GUIDE</span>
+          <h2>装置接入与数据协议</h2>
+          <p>编码器与视觉只负责上报原始结果，融合与计算在此平台完成。</p>
+        </div>
+        <button class="icon-button" value="cancel" type="submit" title="关闭" aria-label="关闭">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </header>
+      <div class="help-content">
+        <div class="help-step">
+          <span>1</span>
+          <div>
+            <strong>编码器上报</strong>
+            <p>WebSocket 发送 JSON：<code>{"type":"encoder","raw":14821,"countsPerRev":8192,"timestamp":...}</code></p>
+          </div>
+        </div>
+        <div class="help-step">
+          <span>2</span>
+          <div>
+            <strong>灰度谷值顺序计数</strong>
+            <p>检测前将画面最长边放大到 1920 px，沿整幅中心水平灰度带识别暗纹。中央暗斑会单独识别并标注，但其宽谷和内部伪谷值不进入环级序列；不使用环心、半径或圆环拟合。</p>
+          </div>
+        </div>
+        <div class="help-step">
+          <span>3</span>
+          <div>
+            <strong>标定线穿越记录</strong>
+            <p>谷值穿过固定标定线后记录编码器坐标：左侧从起始级递减到 1，跳过中央暗斑，右侧再从 1 递增回起始级，最后计算 D = |xR − xL|。</p>
+          </div>
+        </div>
+        <div class="help-step">
+          <span>4</span>
+          <div>
+            <strong>硬件触发</strong>
+            <p>设备可额外发送 <code>{"type":"capture","side":"left"}</code>，平台会冻结当前编码器读数并记录测点。</p>
+          </div>
+        </div>
+      </div>
+      <footer class="dialog-foot">
+        <div class="dialog-note">
+          <i data-lucide="book-open-text" aria-hidden="true"></i>
+          <span>完整字段说明见 README.md。</span>
+        </div>
+        <button class="primary-action" value="default" type="submit">知道了</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+  <script>
+    if (document.documentElement.classList.contains("innovation-embed")) {
+      const reportEmbedHeight = () => {
+        window.parent.postMessage(
+          {
+            type: "newton-innovation-height",
+            height: Math.ceil(document.documentElement.scrollHeight),
+            view: document.querySelector(".app-view.active")?.id.replace(/^view-/, "") || "live",
+          },
+          "*",
+        );
+      };
+      window.addEventListener("load", () => {
+        window.setTimeout(reportEmbedHeight, 900);
+        if ("ResizeObserver" in window) {
+          new ResizeObserver(reportEmbedHeight).observe(document.body);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
