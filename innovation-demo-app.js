@@ -132,6 +132,10 @@
     return Number(value).toFixed(digits);
   }
 
+  function formatData3(value) {
+    return Number.isFinite(Number(value)) ? Number(value).toFixed(3) : "--";
+  }
+
   function signed(value, digits = 4) {
     if (!Number.isFinite(value)) return "--";
     return `${value >= 0 ? "+" : ""}${Number(value).toFixed(digits)}`;
@@ -733,13 +737,13 @@
   }
 
   function studentComparisonValue(value) {
-    return Number.isFinite(value) ? Number(value).toFixed(4) : "--";
+    return Number.isFinite(value) ? Number(value).toFixed(3) : "--";
   }
 
   function studentComparisonDiff(value) {
     if (!Number.isFinite(value)) return `<td class="student-diff">--</td>`;
     const level = Math.abs(value) > 0.003 ? "warn" : "good";
-    return `<td class="student-diff ${level}">${signed(value, 4)}</td>`;
+    return `<td class="student-diff ${level}">${signed(value, 3)}</td>`;
   }
 
   function updateStudentComparisonBadge(rows = studentComparisonRows()) {
@@ -895,13 +899,13 @@
       findings.push({
         severity: "good",
         title: "测得结果与参考值一致",
-        detail: `R = ${fit.rMeters.toFixed(4)} m，相对偏差 ${signed(fit.relativeError, 2)}%，处于 1.5% 诊断带内。`
+        detail: `R = ${fit.rMeters.toFixed(3)} m，相对偏差 ${signed(fit.relativeError, 2)}%，处于 1.5% 诊断带内。`
       });
     } else if (Math.abs(fit.relativeError) <= 3.5) {
       findings.push({
         severity: "warn",
         title: "结果存在可解释的系统偏差",
-        detail: `R = ${fit.rMeters.toFixed(4)} m，相对偏差 ${signed(fit.relativeError, 2)}%，建议检查环级映射与鼓轮零点。`
+        detail: `R = ${fit.rMeters.toFixed(3)} m，相对偏差 ${signed(fit.relativeError, 2)}%，建议检查环级映射与鼓轮零点。`
       });
       score -= 10;
       recommendations.push("复核起始暗环级次和编码器零点，确认左右测点属于同一干涉级次。");
@@ -909,7 +913,7 @@
       findings.push({
         severity: "error",
         title: "结果偏差超出教学容差",
-        detail: `R = ${fit.rMeters.toFixed(4)} m，相对偏差 ${signed(fit.relativeError, 2)}%。先排查级次、单位与螺距参数。`
+        detail: `R = ${fit.rMeters.toFixed(3)} m，相对偏差 ${signed(fit.relativeError, 2)}%。先排查级次、单位与螺距参数。`
       });
       score -= 24;
       recommendations.push("优先检查波长单位、螺距参数、编码器方向以及环级基准是否同时正确。");
@@ -1106,13 +1110,13 @@
         findings.unshift({
           severity: "good",
           title: "平台结果与学生核算一致",
-          detail: `学生采用${comparison.method}得到 R = ${comparison.studentR.toFixed(4)} m，与平台拟合值相差 ${signed(comparison.difference, 4)} m（${signed(comparison.differencePercent, 2)}%）。`
+          detail: `学生采用${comparison.method}得到 R = ${comparison.studentR.toFixed(3)} m，与平台拟合值相差 ${signed(comparison.difference, 3)} m（${signed(comparison.differencePercent, 2)}%）。`
         });
       } else if (comparison.severity === "warn") {
         findings.unshift({
           severity: "warn",
           title: "平台结果与学生核算存在差异",
-          detail: `学生 R = ${comparison.studentR.toFixed(4)} m，与平台值相差 ${signed(comparison.differencePercent, 2)}%，建议复核公式、单位和逐差级次。`
+          detail: `学生 R = ${comparison.studentR.toFixed(3)} m，与平台值相差 ${signed(comparison.differencePercent, 2)}%，建议复核公式、单位和逐差级次。`
         });
         score -= 5;
         recommendations.push("对照学生逐差过程与平台线性拟合过程，重点检查是否使用了同一组原始读数。");
@@ -1152,7 +1156,7 @@
       findings.push({
         severity: "warn",
         title: "学生读数存在整体偏移",
-        detail: `学生左右读数平均绝对差分别为 ${studentRaw.meanAbsLeftDiff.toFixed(4)} mm 和 ${studentRaw.meanAbsRightDiff.toFixed(4)} mm，可能存在零点或标定线读数偏差。`
+        detail: `学生左右读数平均绝对差分别为 ${studentRaw.meanAbsLeftDiff.toFixed(3)} mm 和 ${studentRaw.meanAbsRightDiff.toFixed(3)} mm，可能存在零点或标定线读数偏差。`
       });
       score -= 8;
       recommendations.push("核对学生起始读数、固定标定线和编码器零位；整体同向偏移通常不是单环判读问题。");
@@ -1389,7 +1393,7 @@
       || (["ws", "serial"].includes(encoder.mode) && state.encoder.mainScaleBaselineRaw != null);
     const displayedReading = encoder.positionMm;
     $("encoderAngle").textContent = encoder.angleDeg.toFixed(2);
-    $("positionReading").textContent = displayedReading.toFixed(4);
+    $("positionReading").textContent = displayedReading.toFixed(3);
     $("syncReadingLabel").textContent = zeroedHardware ? "起始读数 + 相对位移" : "换算读数";
     $("rawValueLabel").textContent = zeroedHardware ? "编码器相对值" : "原始计数";
     $("deviceMetaLabel").textContent = syncedReading ? "设备时间" : "每转计数";
@@ -1423,7 +1427,7 @@
     }
     const liveSideCell = document.querySelector("#ringSummaryBody tr.active .ring-side-reading.live");
     if (liveSideCell) {
-      liveSideCell.textContent = `${currentEncoderValue().toFixed(4)} mm`;
+      liveSideCell.textContent = `${currentEncoderValue().toFixed(3)} mm`;
     }
   }
 
@@ -1614,8 +1618,8 @@
       const left = pair?.left;
       const right = pair?.right;
       const complete = Boolean(left && right);
-      const leftReading = left ? Number(left.positionMm).toFixed(4) : "--";
-      const rightReading = right ? Number(right.positionMm).toFixed(4) : "--";
+      const leftReading = left ? Number(left.positionMm).toFixed(3) : "--";
+      const rightReading = right ? Number(right.positionMm).toFixed(3) : "--";
       const stateText = complete
         ? "完成"
         : right
@@ -1635,7 +1639,7 @@
               <strong>m = ${row.order}</strong>
               <span class="ring-row-status ${stateClass}">${stateText}</span>
             </div>
-            <small>${complete ? `D ${Number(pair.diameterMm).toFixed(4)} mm` : "灰度谷值穿越记录"}</small>
+            <small>${complete ? `D ${Number(pair.diameterMm).toFixed(3)} mm` : "灰度谷值穿越记录"}</small>
           </td>
           <td class="ring-side-reading left ${left ? "recorded" : isActive && sequence.phase === "left" ? "live" : "pending"}">${leftReading}</td>
           <td class="ring-side-reading right ${right ? "recorded" : isActive && sequence.phase === "right" ? "live" : "pending"}">${rightReading}</td>
@@ -1702,7 +1706,7 @@
     if (options.notify) {
       toast(
         sequence.completed ? "左右两侧顺序记录完成" : "暗环穿越已记录",
-        `m=${order} ${side === "left" ? "左侧" : "右侧"} · ${Number(recorded.readingMm).toFixed(4)} mm`
+        `m=${order} ${side === "left" ? "左侧" : "右侧"} · ${Number(recorded.readingMm).toFixed(3)} mm`
       );
     }
     return recorded;
@@ -1833,8 +1837,8 @@
     if (pair) {
       $("fusionStatus").textContent = "已配对";
       $("fusionStatus").className = "mini-badge live";
-      $("diameterResult").textContent = `${pair.diameterMm.toFixed(4)} mm`;
-      $("diameterSquaredResult").textContent = `${pair.diameterSquared.toFixed(4)} mm²`;
+      $("diameterResult").textContent = `${pair.diameterMm.toFixed(3)} mm`;
+      $("diameterSquaredResult").textContent = `${pair.diameterSquared.toFixed(3)} mm²`;
       $("pairedOrderResult").textContent = `m = ${pair.order}`;
     } else if (left || right) {
       $("fusionStatus").textContent = left ? "等待右测点" : "等待左测点";
@@ -1856,7 +1860,7 @@
     if (measurement) {
       slot.classList.add("recorded");
       slot.classList.remove("waiting");
-      $(valueId).textContent = `${numberOr(measurement.positionMm, 0).toFixed(4)} mm`;
+      $(valueId).textContent = `${numberOr(measurement.positionMm, 0).toFixed(3)} mm`;
       const sourceLabel = measurement.source === "automatic"
         ? "AUTO"
         : measurement.source === "hardware"
@@ -1947,12 +1951,12 @@
       return `
         <tr>
           <td>${pair.order}</td>
-          <td>${numberOr(pair.left?.positionMm, 0).toFixed(4)}</td>
-          <td>${numberOr(pair.right?.positionMm, 0).toFixed(4)}</td>
-          <td>${numberOr(pair.diameterMm, 0).toFixed(4)}</td>
-          <td>${numberOr(pair.diameterSquared, 0).toFixed(4)}</td>
-          <td>${stats ? stats.fitted.toFixed(4) : "--"}</td>
-          <td class="${residualClass}">${stats ? signed(stats.residual, 4) : "--"}</td>
+          <td>${numberOr(pair.left?.positionMm, 0).toFixed(3)}</td>
+          <td>${numberOr(pair.right?.positionMm, 0).toFixed(3)}</td>
+          <td>${numberOr(pair.diameterMm, 0).toFixed(3)}</td>
+          <td>${numberOr(pair.diameterSquared, 0).toFixed(3)}</td>
+          <td>${stats ? stats.fitted.toFixed(3) : "--"}</td>
+          <td class="${residualClass}">${stats ? signed(stats.residual, 3) : "--"}</td>
           <td>${(numberOr(pair.confidence, 0) * 100).toFixed(1)}%</td>
         </tr>
       `;
@@ -1970,13 +1974,13 @@
         <td class="student-input-cell">
           <input class="student-reading-input" type="number" step="0.0001" inputmode="decimal"
             data-student-order="${row.order}" data-student-side="left"
-            value="${Number.isFinite(row.studentLeft) ? row.studentLeft.toFixed(4) : ""}"
+            value="${Number.isFinite(row.studentLeft) ? row.studentLeft.toFixed(3) : ""}"
             placeholder="左读数">
         </td>
         <td class="student-input-cell">
           <input class="student-reading-input" type="number" step="0.0001" inputmode="decimal"
             data-student-order="${row.order}" data-student-side="right"
-            value="${Number.isFinite(row.studentRight) ? row.studentRight.toFixed(4) : ""}"
+            value="${Number.isFinite(row.studentRight) ? row.studentRight.toFixed(3) : ""}"
             placeholder="右读数">
         </td>
         <td>${studentComparisonValue(row.platformLeft)}</td>
@@ -2011,7 +2015,7 @@
       return;
     }
 
-    $("fitRMetric").textContent = fit.rMeters.toFixed(4);
+    $("fitRMetric").textContent = fit.rMeters.toFixed(3);
     $("fitRUnit").textContent = "m";
     $("fitErrorMetric").textContent = `${fit.relativeError >= 0 ? "+" : ""}${fit.relativeError.toFixed(2)}%`;
     $("fitErrorNote").textContent = `参考 ${fit.referenceR.toFixed(3)} m`;
@@ -2023,7 +2027,7 @@
     $("slopeStat").textContent = `${fit.slope.toFixed(6)} mm²/m`;
     $("interceptStat").textContent = `${fit.intercept.toFixed(6)} mm²`;
     $("residualStdStat").textContent = `${fit.residualStd.toFixed(6)} mm²`;
-    $("fitUncertaintyStat").textContent = `${fit.uncertaintyR.toFixed(4)} m`;
+    $("fitUncertaintyStat").textContent = `${fit.uncertaintyR.toFixed(3)} m`;
     renderPairTable(fit);
     drawFitChart(fit);
     renderEvidence(fit);
@@ -2063,7 +2067,7 @@
       : diagnostics.score >= 72
         ? "结果可用，建议复核"
         : "检测到明显异常";
-    $("quickDiagnosisText").textContent = `${diagnostics.summary} 当前 R = ${diagnostics.fit.rMeters.toFixed(4)} m，R² = ${diagnostics.fit.r2.toFixed(4)}。`;
+    $("quickDiagnosisText").textContent = `${diagnostics.summary} 当前 R = ${diagnostics.fit.rMeters.toFixed(3)} m，R² = ${diagnostics.fit.r2.toFixed(3)}。`;
   }
 
   function renderReport() {
@@ -2090,8 +2094,8 @@
       $("reportFormula").textContent = "等待有效拟合数据。";
     } else {
       const ringPairs = fit.pairs.filter((pair) => Number(pair.order) > 0);
-      $("reportSummary").textContent = `本次实验共形成 ${ringPairs.length} 组暗环左右配对，覆盖第 ${ringPairs[0].order}–${ringPairs.at(-1).order} 级暗环${fit.pairs.some((pair) => Number(pair.order) === 0) ? "，并包含中央 m=0 对照" : ""}。按 D² = a·m + b 进行${fit.throughOrigin ? "过原点" : "含截距"}最小二乘拟合，得到曲率半径 R = ${fit.rMeters.toFixed(4)} m，相对参考值偏差 ${signed(fit.relativeError, 2)}%，拟合优度 R² = ${fit.r2.toFixed(5)}。${diagnostics.summary}${comparison ? ` 学生采用${comparison.method}得到 ${comparison.studentR.toFixed(4)} m，与平台结果相差 ${signed(comparison.differencePercent, 2)}%。` : ""}`;
-      $("reportR").textContent = `${fit.rMeters.toFixed(4)} m`;
+      $("reportSummary").textContent = `本次实验共形成 ${ringPairs.length} 组暗环左右配对，覆盖第 ${ringPairs[0].order}–${ringPairs.at(-1).order} 级暗环${fit.pairs.some((pair) => Number(pair.order) === 0) ? "，并包含中央 m=0 对照" : ""}。按 D² = a·m + b 进行${fit.throughOrigin ? "过原点" : "含截距"}最小二乘拟合，得到曲率半径 R = ${fit.rMeters.toFixed(3)} m，相对参考值偏差 ${signed(fit.relativeError, 2)}%，拟合优度 R² = ${fit.r2.toFixed(3)}。${diagnostics.summary}${comparison ? ` 学生采用${comparison.method}得到 ${comparison.studentR.toFixed(3)} m，与平台结果相差 ${signed(comparison.differencePercent, 2)}%。` : ""}`;
+      $("reportR").textContent = `${fit.rMeters.toFixed(3)} m`;
       $("reportError").textContent = `${fit.relativeError >= 0 ? "+" : ""}${fit.relativeError.toFixed(2)}%`;
       $("reportR2").textContent = fit.r2.toFixed(5);
       $("reportN").textContent = String(ringPairs.length);
@@ -2106,22 +2110,22 @@
     }
     $("studentMethodInput").value = state.session.studentMethod || "逐差法";
 
-    $("reportAutoR").textContent = fit ? `${fit.rMeters.toFixed(4)} m` : "--";
+    $("reportAutoR").textContent = fit ? `${fit.rMeters.toFixed(3)} m` : "--";
     $("reportStudentR").textContent = comparison
-      ? `${comparison.studentR.toFixed(4)} m · ${comparison.method}`
+      ? `${comparison.studentR.toFixed(3)} m · ${comparison.method}`
       : "--";
     $("reportCompareDiff").textContent = comparison
       ? `${signed(comparison.difference, 4)} m / ${signed(comparison.differencePercent, 2)}%`
       : "--";
     $("reportCompareState").textContent = comparison ? comparison.label : "--";
     const rawComparisonText = studentRawSummary
-      ? `逐环对照已录入 ${studentRawSummary.count} 级；左右平均绝对差分别为 ${studentRawSummary.meanAbsLeftDiff.toFixed(4)} mm 和 ${studentRawSummary.meanAbsRightDiff.toFixed(4)} mm；最大 D 差值出现在 m=${studentRawSummary.largest.order}，为 ${signed(studentRawSummary.largest.diameterDiff, 4)} mm。`
+      ? `逐环对照已录入 ${studentRawSummary.count} 级；左右平均绝对差分别为 ${studentRawSummary.meanAbsLeftDiff.toFixed(3)} mm 和 ${studentRawSummary.meanAbsRightDiff.toFixed(3)} mm；最大 D 差值出现在 m=${studentRawSummary.largest.order}，为 ${signed(studentRawSummary.largest.diameterDiff, 3)} mm。`
       : "尚未录入完整的逐环学生左右读数。";
     $("reportCompareText").textContent = `${comparison
-      ? `平台拟合结果为 ${fit.rMeters.toFixed(4)} m，学生采用${comparison.method}得到 ${comparison.studentR.toFixed(4)} m${comparison.studentUncertaintyR != null && Number.isFinite(comparison.studentUncertaintyR) ? `，报告不确定度 ${comparison.studentUncertaintyR.toFixed(4)} m` : ""}。两者绝对差值为 ${Math.abs(comparison.difference).toFixed(4)} m，相对差 ${Math.abs(comparison.differencePercent).toFixed(2)}%。`
+      ? `平台拟合结果为 ${fit.rMeters.toFixed(3)} m，学生采用${comparison.method}得到 ${comparison.studentR.toFixed(3)} m${comparison.studentUncertaintyR != null && Number.isFinite(comparison.studentUncertaintyR) ? `，报告不确定度 ${comparison.studentUncertaintyR.toFixed(3)} m` : ""}。两者绝对差值为 ${Math.abs(comparison.difference).toFixed(3)} m，相对差 ${Math.abs(comparison.differencePercent).toFixed(2)}%。`
       : "尚未录入学生手工核算结果。"} ${rawComparisonText}`;
     $("studentComparisonSideText").textContent = comparison
-      ? `${comparison.label}：学生 ${comparison.studentR.toFixed(4)} m，与平台相差 ${signed(comparison.differencePercent, 2)}%。`
+      ? `${comparison.label}：学生 ${comparison.studentR.toFixed(3)} m，与平台相差 ${signed(comparison.differencePercent, 2)}%。`
       : "录入学生结果后，平台会检查两种核算是否一致。";
 
     $("reportTableBody").innerHTML = pairs.slice(-12).map((pair) => {
@@ -2133,10 +2137,10 @@
       return `
         <tr>
           <td>${pair.order}</td>
-          <td>${numberOr(pair.left?.positionMm, 0).toFixed(4)}</td>
-          <td>${numberOr(pair.right?.positionMm, 0).toFixed(4)}</td>
-          <td>${numberOr(pair.diameterMm, 0).toFixed(4)}</td>
-          <td>${numberOr(pair.diameterSquared, 0).toFixed(4)}</td>
+          <td>${numberOr(pair.left?.positionMm, 0).toFixed(3)}</td>
+          <td>${numberOr(pair.right?.positionMm, 0).toFixed(3)}</td>
+          <td>${numberOr(pair.diameterMm, 0).toFixed(3)}</td>
+          <td>${numberOr(pair.diameterSquared, 0).toFixed(3)}</td>
           <td>${residual}</td>
         </tr>
       `;
@@ -3290,7 +3294,7 @@
           addEvent(
             "capture",
             "检测到反向读数",
-            `鼓轮由正向转为反向移动，本次读数可能包含空程误差 · ${measurement.positionMm.toFixed(4)} mm`
+            `鼓轮由正向转为反向移动，本次读数可能包含空程误差 · ${measurement.positionMm.toFixed(3)} mm`
           );
         }
         motion.direction = nextDirection;
@@ -3330,14 +3334,14 @@
     addEvent(
       "capture",
       `${options.automatic ? "自动记录" : "记录"} m=${order} ${side === "left" ? "左" : "右"}侧测点`,
-      `${measurement.positionMm.toFixed(4)} mm · raw ${measurement.raw} · 置信度 ${(confidence * 100).toFixed(1)}%`
+      `${measurement.positionMm.toFixed(3)} mm · raw ${measurement.raw} · 置信度 ${(confidence * 100).toFixed(1)}%`
     );
 
     if (pair.left && pair.right) {
       addEvent(
         "pair",
         `第 ${order} 级暗环完成配对`,
-        `D = ${pair.diameterMm.toFixed(4)} mm · D² = ${pair.diameterSquared.toFixed(4)} mm²`
+        `D = ${pair.diameterMm.toFixed(3)} mm · D² = ${pair.diameterSquared.toFixed(3)} mm²`
       );
     }
 
@@ -3352,7 +3356,7 @@
             : "测量点已记录",
         measurement.directionWarning
           ? `m=${order} 的读数可能受空程影响，建议保持单向移动后重新测量。`
-          : `m=${order}，${side === "left" ? "左侧" : "右侧"}读数 ${measurement.positionMm.toFixed(4)} mm。`,
+          : `m=${order}，${side === "left" ? "左侧" : "右侧"}读数 ${measurement.positionMm.toFixed(3)} mm。`,
         measurement.directionWarning ? "warn" : undefined
       );
     }
@@ -3399,7 +3403,7 @@
     ctx.fillRect(0, height - 22, width, 22);
     ctx.fillStyle = CANVAS_THEME.surface;
     ctx.font = "10px Cascadia Mono, Consolas, monospace";
-    ctx.fillText(`${label || `m=${state.currentRingOrder}`} · ${state.encoder.positionMm.toFixed(4)} mm`, 8, height - 7);
+    ctx.fillText(`${label || `m=${state.currentRingOrder}`} · ${state.encoder.positionMm.toFixed(3)} mm`, 8, height - 7);
     return canvas.toDataURL("image/jpeg", 0.56);
   }
 
@@ -4275,17 +4279,17 @@
       const comparison = comparisonByOrder.get(Number(pair.order));
       return [
         pair.order,
-        numberOr(pair.left?.positionMm, 0).toFixed(6),
-        numberOr(pair.right?.positionMm, 0).toFixed(6),
-        numberOr(pair.diameterMm, 0).toFixed(6),
-        numberOr(pair.diameterSquared, 0).toFixed(6),
+        numberOr(pair.left?.positionMm, 0).toFixed(3),
+        numberOr(pair.right?.positionMm, 0).toFixed(3),
+        numberOr(pair.diameterMm, 0).toFixed(3),
+        numberOr(pair.diameterSquared, 0).toFixed(3),
         numberOr(pair.confidence, 0).toFixed(4),
-        Number.isFinite(comparison?.studentLeft) ? comparison.studentLeft.toFixed(6) : "",
-        Number.isFinite(comparison?.studentRight) ? comparison.studentRight.toFixed(6) : "",
-        Number.isFinite(comparison?.leftDiff) ? comparison.leftDiff.toFixed(6) : "",
-        Number.isFinite(comparison?.rightDiff) ? comparison.rightDiff.toFixed(6) : "",
-        Number.isFinite(comparison?.studentDiameter) ? comparison.studentDiameter.toFixed(6) : "",
-        Number.isFinite(comparison?.diameterDiff) ? comparison.diameterDiff.toFixed(6) : ""
+        Number.isFinite(comparison?.studentLeft) ? comparison.studentLeft.toFixed(3) : "",
+        Number.isFinite(comparison?.studentRight) ? comparison.studentRight.toFixed(3) : "",
+        Number.isFinite(comparison?.leftDiff) ? comparison.leftDiff.toFixed(3) : "",
+        Number.isFinite(comparison?.rightDiff) ? comparison.rightDiff.toFixed(3) : "",
+        Number.isFinite(comparison?.studentDiameter) ? comparison.studentDiameter.toFixed(3) : "",
+        Number.isFinite(comparison?.diameterDiff) ? comparison.diameterDiff.toFixed(3) : ""
       ];
     });
     const csv = "\uFEFF" + [header, ...rows].map((row) => row.join(",")).join("\r\n");
@@ -4309,14 +4313,14 @@
       `## 实验摘要`,
       "",
       fit
-        ? `本次实验形成 ${pairs.length} 组左右配对测点。测得 R = ${fit.rMeters.toFixed(4)} m，相对偏差 ${signed(fit.relativeError, 2)}%，R² = ${fit.r2.toFixed(5)}。${diagnostics.summary}`
+        ? `本次实验形成 ${pairs.length} 组左右配对测点。测得 R = ${fit.rMeters.toFixed(3)} m，相对偏差 ${signed(fit.relativeError, 2)}%，R² = ${fit.r2.toFixed(3)}。${diagnostics.summary}`
         : "当前有效配对不足，尚无法进行可靠拟合。",
       "",
       `## 配对测量`,
       "",
       "| m | 左读数/mm | 右读数/mm | D/mm | D²/mm² |",
       "|---:|---:|---:|---:|---:|",
-      ...pairs.map((pair) => `| ${pair.order} | ${numberOr(pair.left?.positionMm, 0).toFixed(4)} | ${numberOr(pair.right?.positionMm, 0).toFixed(4)} | ${numberOr(pair.diameterMm, 0).toFixed(4)} | ${numberOr(pair.diameterSquared, 0).toFixed(4)} |`),
+      ...pairs.map((pair) => `| ${pair.order} | ${numberOr(pair.left?.positionMm, 0).toFixed(3)} | ${numberOr(pair.right?.positionMm, 0).toFixed(3)} | ${numberOr(pair.diameterMm, 0).toFixed(3)} | ${numberOr(pair.diameterSquared, 0).toFixed(3)} |`),
       "",
       `## 学生逐环对照`,
       "",
@@ -4325,7 +4329,7 @@
         : "尚未录入学生逐环左右读数。",
       ...(studentRows.length ? [
         "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
-        ...studentRows.map((row) => `| ${row.order} | ${Number.isFinite(row.studentLeft) ? row.studentLeft.toFixed(4) : "--"} | ${Number.isFinite(row.studentRight) ? row.studentRight.toFixed(4) : "--"} | ${Number.isFinite(row.platformLeft) ? row.platformLeft.toFixed(4) : "--"} | ${Number.isFinite(row.platformRight) ? row.platformRight.toFixed(4) : "--"} | ${Number.isFinite(row.leftDiff) ? signed(row.leftDiff, 4) : "--"} | ${Number.isFinite(row.rightDiff) ? signed(row.rightDiff, 4) : "--"} | ${Number.isFinite(row.studentDiameter) ? row.studentDiameter.toFixed(4) : "--"} | ${Number.isFinite(row.platformDiameter) ? row.platformDiameter.toFixed(4) : "--"} | ${Number.isFinite(row.diameterDiff) ? signed(row.diameterDiff, 4) : "--"} |`)
+        ...studentRows.map((row) => `| ${row.order} | ${Number.isFinite(row.studentLeft) ? row.studentLeft.toFixed(3) : "--"} | ${Number.isFinite(row.studentRight) ? row.studentRight.toFixed(3) : "--"} | ${Number.isFinite(row.platformLeft) ? row.platformLeft.toFixed(3) : "--"} | ${Number.isFinite(row.platformRight) ? row.platformRight.toFixed(3) : "--"} | ${Number.isFinite(row.leftDiff) ? signed(row.leftDiff, 3) : "--"} | ${Number.isFinite(row.rightDiff) ? signed(row.rightDiff, 3) : "--"} | ${Number.isFinite(row.studentDiameter) ? row.studentDiameter.toFixed(3) : "--"} | ${Number.isFinite(row.platformDiameter) ? row.platformDiameter.toFixed(3) : "--"} | ${Number.isFinite(row.diameterDiff) ? signed(row.diameterDiff, 3) : "--"} |`)
       ] : []),
       "",
       `## AI 诊断`,
@@ -4335,7 +4339,7 @@
       `## 学生数据对照`,
       "",
       diagnostics.comparison
-        ? `平台拟合 R = ${fit.rMeters.toFixed(4)} m；学生采用${diagnostics.comparison.method}得到 R = ${diagnostics.comparison.studentR.toFixed(4)} m；差值 ${signed(diagnostics.comparison.difference, 4)} m（${signed(diagnostics.comparison.differencePercent, 2)}%）；结论：${diagnostics.comparison.label}。`
+        ? `平台拟合 R = ${fit.rMeters.toFixed(3)} m；学生采用${diagnostics.comparison.method}得到 R = ${diagnostics.comparison.studentR.toFixed(3)} m；差值 ${signed(diagnostics.comparison.difference, 3)} m（${signed(diagnostics.comparison.differencePercent, 2)}%）；结论：${diagnostics.comparison.label}。`
         : "尚未录入学生手工核算结果。",
       "",
       `## 建议`,
@@ -5223,7 +5227,7 @@
         addEvent(
           "encoder",
           "三维鼓轮手动操作",
-          `当前位置 ${state.encoder.positionMm.toFixed(4)} mm`,
+          `当前位置 ${state.encoder.positionMm.toFixed(3)} mm`,
           { silent: true }
         );
       }
@@ -5480,7 +5484,7 @@
         state.session.studentResultR == null ? "已清除学生核算结果" : "学生核算结果已录入",
         state.session.studentResultR == null
           ? "诊断报告不再进行学生结果对照"
-          : `R = ${state.session.studentResultR.toFixed(4)} m · ${state.session.studentMethod}`
+          : `R = ${state.session.studentResultR.toFixed(3)} m · ${state.session.studentMethod}`
       );
       toast("学生结果已更新", "平台已重新计算自动结果与学生核算的差值。");
     });
