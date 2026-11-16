@@ -15,7 +15,7 @@
   const DEFAULT_CALIBRATION_RATIO = 0.48;
   const CALIBRATION_VERSION = 1;
   const DEMO_ROTATION_RATE = 12;
-  const DEMO_DATA_VERSION = 10;
+  const DEMO_DATA_VERSION = 11;
   const CANVAS_THEME = Object.freeze({
     surface: "#f7f9fa",
     surfaceMid: "#e3ebef",
@@ -206,10 +206,9 @@
         ? centerReading
         : centerReading + diameterMm / 2 + Math.cos(index * 0.8) * 0.0015;
       const captureIssues = new Map([
-        ["12:right", { shiftMm: -0.085, latencyMs: 286, flag: "encoder-reversal" }],
-        ["18:left", { shiftMm: 0.065, latencyMs: 54, flag: "encoder-reversal" }],
-        ["24:right", { shiftMm: -0.050, latencyMs: 18, flag: "encoder-reversal" }],
-        ["6:left", { shiftMm: 0, latencyMs: 312, flag: "latency-spike" }]
+        ["12:right", { shiftMm: -0.085, latencyMs: 18, flag: "encoder-reversal" }],
+        ["18:left", { shiftMm: 0.065, latencyMs: 18, flag: "encoder-reversal" }],
+        ["24:right", { shiftMm: -0.050, latencyMs: 18, flag: "encoder-reversal" }]
       ]);
       const leftIssue = captureIssues.get(`${order}:left`);
       const rightIssue = captureIssues.get(`${order}:right`);
@@ -304,10 +303,10 @@
       },
       {
         id: uid("event"),
-        type: "warning",
-        title: "编码器链路延迟尖峰",
-        detail: "m=6 左侧测点延迟达到 312 ms，画面与测点时间戳可能错位",
-        at: new Date(started.getTime() + 7 * 64000).toISOString()
+        type: "encoder",
+        title: "检测到编码器回转",
+        detail: "m=24 右侧测点前发生反向转动，已记录原始计数与角度",
+        at: new Date(started.getTime() + 25 * 64000).toISOString()
       },
       ...pairs.map((pair, index) => ({
         id: uid("event"),
@@ -1015,13 +1014,27 @@
         (capture) => capture.directionWarning
       );
       if (directionWarnings.length) {
+        const reversalOrders = [...new Set(directionWarnings.map((capture) => Number(capture.order)))].sort((left, right) => right - left);
         findings.push({
           severity: "warn",
           title: "检测到反向测量",
-          detail: `${directionWarnings.length} 个测点记录前改变了鼓轮移动方向，可能引入螺纹空程误差。`
+          detail: `${directionWarnings.length} 个测点在记录前反转鼓轮方向（m=${reversalOrders.join("、")}），违反单向读数要求，可能引入螺纹空程误差。`
         });
         score -= Math.min(12, directionWarnings.length * 3);
         recommendations.push("按同一方向完成整组读数；需要返回时先越过目标位置再单向靠近，或重新开始本组测量。");
+        const affectedReversalOutliers = fit.residualSigma
+          .map((sigma, index) => ({ sigma, pair: fit.pairs[index] }))
+          .filter((item) =>
+            reversalOrders.includes(Number(item.pair.order))
+            && Math.abs(item.sigma) > numberOr(state.session.residualThreshold, 2.5)
+          );
+        if (affectedReversalOutliers.length) {
+          findings.push({
+            severity: "warn",
+            title: "空程误差与反向测点位置吻合",
+            detail: `${affectedReversalOutliers.map((item) => `m=${item.pair.order}（${signed(item.sigma, 1)}σ）`).join("、")} 同时具有方向反转记录和残差异常，支持螺纹空程误差判断。`
+          });
+        }
       }
 
     const captureLatencies = state.session.captures
@@ -1170,7 +1183,7 @@
       recommendations.push("保持现有操作方式，并在报告中保留原始计数、图像帧和测点时间戳。");
     }
 
-    const deviceIssuePattern = /反向测量|延迟尖峰|计数跳变|链路延迟/;
+    const deviceIssuePattern = /反向测量|空程误差|延迟尖峰|计数跳变|链路延迟/;
     findings.sort((left, right) =>
       Number(!deviceIssuePattern.test(left.title)) - Number(!deviceIssuePattern.test(right.title))
     );
