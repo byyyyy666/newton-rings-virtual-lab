@@ -1972,13 +1972,13 @@
       <tr data-student-order="${row.order}">
         <td class="student-order">m = ${row.order}</td>
         <td class="student-input-cell">
-          <input class="student-reading-input" type="number" step="0.0001" inputmode="decimal"
+          <input class="student-reading-input" type="number" step="0.001" inputmode="decimal"
             data-student-order="${row.order}" data-student-side="left"
             value="${Number.isFinite(row.studentLeft) ? row.studentLeft.toFixed(3) : ""}"
             placeholder="左读数">
         </td>
         <td class="student-input-cell">
-          <input class="student-reading-input" type="number" step="0.0001" inputmode="decimal"
+          <input class="student-reading-input" type="number" step="0.001" inputmode="decimal"
             data-student-order="${row.order}" data-student-side="right"
             value="${Number.isFinite(row.studentRight) ? row.studentRight.toFixed(3) : ""}"
             placeholder="右读数">
@@ -3966,7 +3966,7 @@
         toast(
           detected ? `已识别 ${detected} 个灰度谷值` : "未识别到灰度谷值",
           autoRecorded
-            ? `谷值穿越标定线，已记录 m=${autoRecorded.order} ${autoRecorded.side === "left" ? "左" : "右"}侧 · ${Number(autoRecorded.readingMm).toFixed(4)} mm。`
+            ? `谷值穿越标定线，已记录 m=${autoRecorded.order} ${autoRecorded.side === "left" ? "左" : "右"}侧 · ${Number(autoRecorded.readingMm).toFixed(3)} mm。`
             : state.ringSequence.completed
               ? "左右两侧顺序记录已经完成，可点击“重新开始计数”。"
               : `等待谷值穿过固定标定线，下一测点为 m=${state.ringSequence.currentOrder} ${state.ringSequence.phase === "left" ? "左" : "右"}侧。`,
@@ -4551,11 +4551,11 @@
   }
 
   function configuredStartPositionMm() {
-    return clamp(
+    return Math.round(clamp(
       numberOr(settings.startPositionMm, MEASUREMENT_MAX_MM / 2),
       MEASUREMENT_MIN_MM,
       MEASUREMENT_MAX_MM
-    );
+    ) * 1000) / 1000;
   }
 
   function updateStartPositionUI() {
@@ -4568,25 +4568,25 @@
       || (["ws", "serial"].includes(state.encoder.mode) && state.encoder.mainScaleBaselineRaw != null);
     hint.classList.toggle("locked", locked);
     hint.textContent = locked
-      ? `已同步：当前值设为 0 点，读数 = ${startMm.toFixed(4)} + 相对位移`
+      ? `已同步：当前值设为 0 点，读数 = ${startMm.toFixed(3)} + 相对位移`
       : state.encoder.mode === "demo"
         ? state.demoMotion
-          ? `演示从 ${startMm.toFixed(4)} mm 开始，在 0–50 mm 内往返`
-          : `已定位到 ${startMm.toFixed(4)} mm；点击“继续演示”开始运动`
+          ? `演示从 ${startMm.toFixed(3)} mm 开始，在 0–50 mm 内往返`
+          : `已定位到 ${startMm.toFixed(3)} mm；点击“继续演示”开始运动`
         : state.esp.status === "online" || state.esp.status === "waiting"
           ? `等待设定：连接后首帧设为 0 点`
-          : `连接后将首帧设为 0 点，读数 = ${startMm.toFixed(4)} + 相对位移`;
+          : `连接后将首帧设为 0 点，读数 = ${startMm.toFixed(3)} + 相对位移`;
   }
 
   function setStartPosition(value, { announce = true } = {}) {
-    const startMm = clamp(
+    const startMm = Math.round(clamp(
       numberOr(value, configuredStartPositionMm()),
       MEASUREMENT_MIN_MM,
       MEASUREMENT_MAX_MM
-    );
+    ) * 1000) / 1000;
     settings.startPositionMm = startMm;
     state.esp.modelAnchorMm = startMm;
-    $("startPositionInput").value = startMm.toFixed(4);
+    $("startPositionInput").value = startMm.toFixed(3);
     saveJson(SETTINGS_KEY, settings);
     const demoSession = state.session.demo
       || state.encoder.mode === "demo"
@@ -4634,7 +4634,7 @@
       addEvent(
         "encoder",
         "起始读数已锁定",
-        `设备值 ${state.esp.lastValueMm.toFixed(4)} mm → 主尺 ${startMm.toFixed(4)} mm`
+        `设备值 ${state.esp.lastValueMm.toFixed(3)} mm → 主尺 ${startMm.toFixed(3)} mm`
       );
     } else if (canLockRaw) {
       state.encoder.mainScaleBaselineRaw = state.encoder.lastHardwareRaw;
@@ -4647,7 +4647,7 @@
       addEvent(
         "encoder",
         "起始读数已锁定",
-        `当前设备值设为 0 点 · 主尺 ${startMm.toFixed(4)} mm`
+        `当前设备值设为 0 点 · 主尺 ${startMm.toFixed(3)} mm`
       );
     } else {
       state.encoder.mainScaleBaselineRaw = null;
@@ -4671,9 +4671,9 @@
       toast(
         demoSession || canLockEsp || canLockRaw ? "起始位置已同步" : "起始读数已设置",
         demoSession
-          ? `演示已停在 ${startMm.toFixed(4)} mm；点击“继续演示”后从该位置开始运动。`
+          ? `演示已停在 ${startMm.toFixed(3)} mm；点击“继续演示”后从该位置开始运动。`
           : canLockEsp || canLockRaw
-          ? `当前设备值已设为 0 点，读数从 ${startMm.toFixed(4)} mm 开始累加。`
+          ? `当前设备值已设为 0 点，读数从 ${startMm.toFixed(3)} mm 开始累加。`
           : `连接设备后，首帧将自动设为 0 点。`
       );
     }
@@ -4698,7 +4698,7 @@
     }[state.esp.status] || "等待连接";
     $("espSyncStatus").textContent = statusText;
     $("espSyncAddress").textContent = state.esp.base
-      ? `${state.esp.base} · 起点 ${configuredStartPositionMm().toFixed(4)} mm`
+      ? `${state.esp.base} · 起点 ${configuredStartPositionMm().toFixed(3)} mm`
       : "输入 ESP8266 地址开始同步";
     $("espConnectLabel").textContent = state.esp.source ? "断开" : "连接";
     updateStartPositionUI();
@@ -4774,7 +4774,7 @@
       addEvent(
         "encoder",
         "ESP8266 数据流已接入",
-        `${state.esp.base}/events · 首帧 ${value.toFixed(4)} mm 设为 0 点 · 主尺 ${configuredStartPositionMm().toFixed(4)} mm`
+        `${state.esp.base}/events · 首帧 ${value.toFixed(3)} mm 设为 0 点 · 主尺 ${configuredStartPositionMm().toFixed(3)} mm`
       );
     }
     updateEncoderUI();
@@ -4875,7 +4875,7 @@
     }
     updateEspSyncUI();
     updateStartPositionUI();
-    $("startPositionInput").value = configuredStartPositionMm().toFixed(4);
+    $("startPositionInput").value = configuredStartPositionMm().toFixed(3);
   }
 
   function closeWebSocket(manual = false) {
@@ -5034,7 +5034,7 @@
       addEvent(
         "encoder",
         "编码器零点已建立",
-        `当前设备值 ${Math.round(raw)} 设为 0 点 · 起始读数 ${configuredStartPositionMm().toFixed(4)} mm`
+        `当前设备值 ${Math.round(raw)} 设为 0 点 · 起始读数 ${configuredStartPositionMm().toFixed(3)} mm`
       );
     }
     updateEncoderUI();
