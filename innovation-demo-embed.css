@@ -20,13 +20,20 @@ html.innovation-embed .innovation-embed-tabs {
   display: flex;
   align-items: center;
   gap: 4px;
+  overflow-x: auto;
   padding: 7px 10px;
   background: rgba(247, 250, 248, 0.96);
   border-bottom: 1px solid #cbd6d0;
   backdrop-filter: blur(10px);
+  scrollbar-width: none;
+}
+
+html.innovation-embed .innovation-embed-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .innovation-embed-tab {
+  flex: 0 0 auto;
   min-height: 34px;
   padding: 0 15px;
   color: #61736a;

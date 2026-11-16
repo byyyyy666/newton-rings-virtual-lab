@@ -1437,9 +1437,9 @@
       return;
     }
     const mobile = window.matchMedia("(max-width: 680px)").matches;
-    const processView = event.data.view === "process";
-    const minimum = mobile ? 620 : processView ? 720 : 680;
-    const maximum = mobile ? 760 : processView ? 920 : 860;
+    const scrollableView = ["process", "analysis", "report"].includes(event.data.view);
+    const minimum = mobile ? 620 : scrollableView ? 720 : 680;
+    const maximum = mobile ? 760 : scrollableView ? 920 : 860;
     innovationPlatformFrame.style.height = `${clamp(height + 4, minimum, maximum)}px`;
   });
 
