@@ -486,46 +486,47 @@ label {
   content: "";
   position: absolute;
   z-index: 0;
-  top: 50%;
-  left: 50%;
+  inset: 0;
   width: min(94%, 660px);
   aspect-ratio: 1;
+  height: auto;
+  margin: auto;
   background: radial-gradient(circle, rgba(242, 189, 69, 0.15), rgba(242, 189, 69, 0.025) 50%, transparent 73%);
   border-radius: 50%;
   filter: blur(34px);
-  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
 #heroRingCanvas {
   position: absolute;
   z-index: 2;
-  top: 50%;
-  left: 50%;
+  inset: 0;
   width: min(102%, 690px);
   aspect-ratio: 1;
+  height: auto;
+  margin: auto;
   border-radius: 50%;
   filter: blur(4.2px) saturate(1.2) brightness(1.14) contrast(0.9);
   mask-image: radial-gradient(circle, #000 0 42%, rgba(0, 0, 0, 0.9) 58%, transparent 79%);
   mix-blend-mode: screen;
-  transform: translate(-50%, -50%) rotate(-7deg) scale(1.04);
+  transform: rotate(-7deg) scale(1.04);
   animation: ringDrift 24s ease-in-out infinite alternate;
 }
 
 .hero-ring-orbit {
   position: absolute;
   z-index: 1;
-  top: 50%;
-  left: 50%;
+  inset: 0;
   width: min(108%, 710px);
   aspect-ratio: 1;
+  height: auto;
+  margin: auto;
   border: 1px solid rgba(242, 189, 69, 0.08);
   border-radius: 50%;
   box-shadow:
     0 0 0 38px rgba(255, 255, 255, 0.015),
     0 0 0 95px rgba(242, 189, 69, 0.015);
   filter: blur(0.4px);
-  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
@@ -4710,10 +4711,10 @@ input[type="range"]::-moz-range-thumb {
 
 @keyframes ringDrift {
   from {
-    transform: translate(-50%, -50%) rotate(-7deg) scale(1.04);
+    transform: rotate(-7deg) scale(1.04);
   }
   to {
-    transform: translate(-50%, -50%) rotate(-4deg) scale(1.065);
+    transform: rotate(-4deg) scale(1.065);
   }
 }
 
