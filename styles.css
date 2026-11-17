@@ -5098,7 +5098,9 @@ input[type="range"]::-moz-range-thumb {
   #heroRingCanvas {
     width: 100%;
     max-width: 100%;
+    transform: none;
     transform-origin: 50% 50%;
+    animation: none;
   }
 
   .hero-ring-orbit {
