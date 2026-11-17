@@ -297,6 +297,42 @@
       defaultFrame: 0,
     },
   };
+  const warmedInstrumentFrames = new Set();
+
+  function warmInstrumentFrames(frames) {
+    frames.forEach((source) => {
+      if (warmedInstrumentFrames.has(source)) {
+        return;
+      }
+      warmedInstrumentFrames.add(source);
+      const image = new Image();
+      image.decoding = "async";
+      image.onerror = () => {
+        warmedInstrumentFrames.delete(source);
+      };
+      image.onload = () => {
+        image.decode?.().catch(() => {});
+      };
+      image.src = source;
+    });
+  }
+
+  function framesForInstrument(instrument) {
+    const definition = instrumentDefinitions[instrument];
+    return definition.states
+      ? Object.values(definition.states).flat()
+      : definition.frames;
+  }
+
+  function warmAllInstrumentFrames() {
+    const frames = Object.keys(instrumentDefinitions).flatMap(framesForInstrument);
+    const warm = () => warmInstrumentFrames(frames);
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(warm, { timeout: 1200 });
+    } else {
+      window.setTimeout(warm, 160);
+    }
+  }
 
   const partDefinitions = {
     eyepiece: {
@@ -396,16 +432,22 @@
     const frameKey = currentFrameKey();
     const frames = currentFrames();
     const frame = frameState[frameKey];
-    instrumentImage.style.opacity = animate ? "0.28" : "1";
-    requestAnimationFrame(() => {
+    const applyFrame = () => {
       instrumentImage.src = frames[frame];
       instrumentImage.alt = definition.alt;
-      if (animate) {
+    };
+    if (!animate) {
+      applyFrame();
+      instrumentImage.style.opacity = "1";
+    } else {
+      instrumentImage.style.opacity = "0.55";
+      requestAnimationFrame(() => {
+        applyFrame();
         requestAnimationFrame(() => {
           instrumentImage.style.opacity = "1";
         });
-      }
-    });
+      });
+    }
     viewerFrameText.textContent = `视角 ${String(frame + 1).padStart(2, "0")} / ${String(frames.length).padStart(2, "0")}`;
     updateRingLabels(frame);
     updateMicroscopeHotspots(frame);
@@ -463,6 +505,7 @@
     $("#instrumentFacts").innerHTML = definition.facts
       .map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`)
       .join("");
+    warmInstrumentFrames(currentFrames());
     updateInstrumentImage(false);
     if (instrument === "microscope") {
       activatePart(activePart, false);
@@ -476,6 +519,9 @@
   }
 
   instrumentTabs.forEach((tab) => {
+    const warmTabFrames = () => warmInstrumentFrames(framesForInstrument(tab.dataset.instrument));
+    tab.addEventListener("pointerenter", warmTabFrames);
+    tab.addEventListener("focus", warmTabFrames);
     tab.addEventListener("click", () => setInstrument(tab.dataset.instrument));
   });
 
@@ -483,7 +529,7 @@
     button.addEventListener("click", () => {
       activeRingState = button.dataset.ringState;
       ringStateButtons.forEach((item) => item.classList.toggle("is-active", item === button));
-      updateInstrumentImage();
+      updateInstrumentImage(false);
     });
   });
 
@@ -503,14 +549,15 @@
     const frameKey = currentFrameKey();
     const count = currentFrames().length;
     frameState[frameKey] = (frameState[frameKey] + step + count) % count;
-    updateInstrumentImage();
+    warmInstrumentFrames(currentFrames());
+    updateInstrumentImage(false);
   }
 
   $("#viewerPrev").addEventListener("click", () => rotateInstrument(-1));
   $("#viewerNext").addEventListener("click", () => rotateInstrument(1));
   $("#viewerReset").addEventListener("click", () => {
     frameState[currentFrameKey()] = instrumentDefinitions[activeInstrument].defaultFrame;
-    updateInstrumentImage();
+    updateInstrumentImage(false);
   });
 
   instrumentViewer.addEventListener("pointerdown", (event) => {
@@ -534,11 +581,11 @@
     }
     const frameKey = currentFrameKey();
     const frameCount = currentFrames().length;
-    const deltaFrames = Math.round((event.clientX - dragState.startX) / 34);
+    const deltaFrames = Math.round((event.clientX - dragState.startX) / 12);
     const nextFrame = ((dragState.startFrame + deltaFrames) % frameCount + frameCount) % frameCount;
     if (nextFrame !== frameState[frameKey]) {
       frameState[frameKey] = nextFrame;
-      updateInstrumentImage();
+      updateInstrumentImage(false);
     }
   });
 
@@ -1627,6 +1674,7 @@
 
   renderDataset([]);
   setInstrument("microscope");
+  warmAllInstrumentFrames();
   updateHeroRing();
   updateMeasurement();
   updateQuizProgress();
