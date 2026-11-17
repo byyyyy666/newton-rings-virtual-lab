@@ -71,8 +71,8 @@
 
   function prepareCanvas(canvas) {
     const rectangle = canvas.getBoundingClientRect();
-    const width = Math.max(1, Math.round(rectangle.width || canvas.clientWidth || canvas.width));
-    const height = Math.max(1, Math.round(rectangle.height || rectangle.width || canvas.height));
+    const width = Math.max(1, Math.round(canvas.clientWidth || rectangle.width || canvas.width));
+    const height = Math.max(1, Math.round(canvas.clientHeight || canvas.clientWidth || canvas.height));
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
     if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
       canvas.width = Math.round(width * ratio);
