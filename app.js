@@ -231,7 +231,7 @@
   });
 
   const turntableFrames = (prefix) =>
-    [1, 4, 7, 10].map((index) => `./assets-instruments/${prefix}-${String(index).padStart(2, "0")}.png`);
+    [1, 4, 7, 10].map((index) => `./assets-instruments/${prefix}-${String(index).padStart(2, "0")}.webp`);
 
   const ringLabelPositions = [
     { lens: { x: 0.2256, y: 0.2952 }, glass: { x: 0.7203, y: 0.5653 }, screws: { x: 0.4853, y: 0.4667 }, base: { x: 0.5052, y: 0.6706 } },
