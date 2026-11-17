@@ -297,16 +297,16 @@
       defaultFrame: 0,
     },
   };
-  const warmedInstrumentFrames = new Set();
+  const warmedInstrumentFrames = new Map();
 
   function warmInstrumentFrames(frames) {
     frames.forEach((source) => {
       if (warmedInstrumentFrames.has(source)) {
         return;
       }
-      warmedInstrumentFrames.add(source);
       const image = new Image();
       image.decoding = "async";
+      warmedInstrumentFrames.set(source, image);
       image.onerror = () => {
         warmedInstrumentFrames.delete(source);
       };
