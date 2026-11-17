@@ -1786,6 +1786,11 @@ input[type="range"]::-moz-range-thumb {
   cursor: grabbing;
 }
 
+.instrument-viewer.is-dragging .instrument-model > img,
+.instrument-viewer.is-dragging .component-label {
+  transition: none;
+}
+
 .instrument-viewer.is-sodium {
   background:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -1845,7 +1850,7 @@ input[type="range"]::-moz-range-thumb {
   object-fit: contain;
   filter: drop-shadow(20px 28px 22px rgba(0, 0, 0, 0.44));
   pointer-events: none;
-  transition: opacity 120ms ease;
+  transition: none;
 }
 
 .ring-state-switch {
