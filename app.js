@@ -1064,7 +1064,7 @@
           ensureOperationDeviceViewer();
         }
       },
-      { rootMargin: "320px 0px", threshold: 0.01 },
+      { rootMargin: "0px", threshold: 0.2 },
     );
     operationDeviceObserver.observe(operationDeviceStage);
   } else {
