@@ -14,7 +14,7 @@
   const RING_MAX_DETECTED = 80;
   const DEFAULT_CALIBRATION_RATIO = 0.48;
   const CALIBRATION_VERSION = 1;
-  const DEMO_ROTATION_RATE = 12;
+  const DEMO_ROTATION_RATE = 2;
   const DEMO_DATA_VERSION = 11;
   const CANVAS_THEME = Object.freeze({
     surface: "#f7f9fa",
