@@ -14,7 +14,7 @@
   const RING_MAX_DETECTED = 80;
   const DEFAULT_CALIBRATION_RATIO = 0.48;
   const CALIBRATION_VERSION = 1;
-  const DEMO_ROTATION_RATE = 2;
+  const DEMO_ROTATION_RATE = 3;
   const DEMO_DATA_VERSION = 11;
   const CANVAS_THEME = Object.freeze({
     surface: "#f7f9fa",
@@ -3122,64 +3122,69 @@
   }
 
   function animationLoop(timestamp) {
-    const deltaMs = Math.min(100, timestamp - state.lastTick);
-    state.lastTick = timestamp;
-    const previousRingOrder = state.currentRingOrder;
-    const demoPaused = demoVisualsPaused();
-    state.liveModelViewer?.setAnimationPaused?.(demoPaused);
-    if (!demoPaused) {
-      state.demoClockMs = timestamp;
-      updateDemoEncoder(deltaMs);
-      drawOptics(state.demoClockMs);
+    try {
+      const deltaMs = Math.min(100, timestamp - state.lastTick);
+      state.lastTick = timestamp;
+      const previousRingOrder = state.currentRingOrder;
+      const demoPaused = demoVisualsPaused();
+      state.liveModelViewer?.setAnimationPaused?.(demoPaused);
+      if (!demoPaused) {
+        state.demoClockMs = timestamp;
+        updateDemoEncoder(deltaMs);
+        drawOptics(state.demoClockMs);
+      }
+      if (previousRingOrder !== state.currentRingOrder) {
+        renderCaptureSlots();
+      }
+      const readingMm = clamp(
+        state.encoder.positionMm,
+        MEASUREMENT_MIN_MM,
+        MEASUREMENT_MAX_MM
+      );
+      const stageAngleDeg = normalizeAngle(
+        (readingMm - MEASUREMENT_MIN_MM)
+        / Math.max(0.0001, state.encoder.pitchMm)
+        * 360
+      );
+      state.liveModelViewer?.setReadout?.({
+        angleDeg: stageAngleDeg,
+        positionMm: readingMm,
+        angleOffsetDeg: numberOr(settings.drumZeroAngle, 0)
+      });
+      let mainMm = Math.floor(readingMm + 1e-9);
+      let drumTicks = (readingMm - mainMm) / Math.max(0.0001, state.encoder.pitchMm) * 100;
+      if (drumTicks > 99.9995) {
+        mainMm += 1;
+        drumTicks = 0;
+      }
+      const drumDivisionMm = state.encoder.pitchMm / 100;
+      const reconstructedMm = mainMm + drumTicks * drumDivisionMm;
+      $("liveModelAngle").textContent = `${stageAngleDeg.toFixed(2)}°`;
+      $("liveModelPosition").textContent = `${reconstructedMm.toFixed(3)} mm`;
+      $("liveMainScaleTicks").textContent = String(mainMm);
+      $("liveStageReading").textContent = reconstructedMm.toFixed(3);
+      $("mainScaleHeadValue").textContent = `${reconstructedMm.toFixed(3)} / 50.000 mm`;
+      drawMainScaleRuler();
+      $("liveStageTick").textContent = drumTicks.toFixed(1);
+      $("liveDrumDivision").textContent = drumDivisionMm.toFixed(3);
+      const startReadingMm = configuredStartPositionMm();
+      const relativeReadingMm = state.encoder.relativeMm;
+      $("liveReadingFormula").textContent =
+        `起始 ${startReadingMm.toFixed(3)} ${relativeReadingMm >= 0 ? "+" : "−"} ${Math.abs(relativeReadingMm).toFixed(3)} = ${reconstructedMm.toFixed(3)} mm`;
+      drawEncoderDial();
+      updateEncoderUI();
+      recordEncoderMonitor(timestamp, readingMm);
+      updateVisionUI();
+      const currentSecond = Math.floor(timestamp / 1000);
+      if (currentSecond !== state.lastClockSecond) {
+        state.lastClockSecond = currentSecond;
+        $("stageTimestamp").textContent = formatClock(new Date(), true);
+      }
+    } catch (error) {
+      console.error("Demo animation frame failed:", error);
+    } finally {
+      requestAnimationFrame(animationLoop);
     }
-    if (previousRingOrder !== state.currentRingOrder) {
-      renderCaptureSlots();
-    }
-    const readingMm = clamp(
-      state.encoder.positionMm,
-      MEASUREMENT_MIN_MM,
-      MEASUREMENT_MAX_MM
-    );
-    const stageAngleDeg = normalizeAngle(
-      (readingMm - MEASUREMENT_MIN_MM)
-      / Math.max(0.0001, state.encoder.pitchMm)
-      * 360
-    );
-    state.liveModelViewer?.setReadout?.({
-      angleDeg: stageAngleDeg,
-      positionMm: readingMm,
-      angleOffsetDeg: numberOr(settings.drumZeroAngle, 0)
-    });
-    let mainMm = Math.floor(readingMm + 1e-9);
-    let drumTicks = (readingMm - mainMm) / Math.max(0.0001, state.encoder.pitchMm) * 100;
-    if (drumTicks > 99.9995) {
-      mainMm += 1;
-      drumTicks = 0;
-    }
-    const drumDivisionMm = state.encoder.pitchMm / 100;
-    const reconstructedMm = mainMm + drumTicks * drumDivisionMm;
-    $("liveModelAngle").textContent = `${stageAngleDeg.toFixed(2)}°`;
-    $("liveModelPosition").textContent = `${reconstructedMm.toFixed(3)} mm`;
-    $("liveMainScaleTicks").textContent = String(mainMm);
-    $("liveStageReading").textContent = reconstructedMm.toFixed(3);
-    $("mainScaleHeadValue").textContent = `${reconstructedMm.toFixed(3)} / 50.000 mm`;
-    drawMainScaleRuler();
-    $("liveStageTick").textContent = drumTicks.toFixed(1);
-    $("liveDrumDivision").textContent = drumDivisionMm.toFixed(3);
-    const startReadingMm = configuredStartPositionMm();
-    const relativeReadingMm = state.encoder.relativeMm;
-    $("liveReadingFormula").textContent =
-      `起始 ${startReadingMm.toFixed(3)} ${relativeReadingMm >= 0 ? "+" : "−"} ${Math.abs(relativeReadingMm).toFixed(3)} = ${reconstructedMm.toFixed(3)} mm`;
-    drawEncoderDial();
-    updateEncoderUI();
-    recordEncoderMonitor(timestamp, readingMm);
-    updateVisionUI();
-    const currentSecond = Math.floor(timestamp / 1000);
-    if (currentSecond !== state.lastClockSecond) {
-      state.lastClockSecond = currentSecond;
-      $("stageTimestamp").textContent = formatClock(new Date(), true);
-    }
-    requestAnimationFrame(animationLoop);
   }
 
   function setCurrentRingOrder(order, options = {}) {
@@ -4493,7 +4498,7 @@
       state.encoder.demoDirection = 1;
       state.encoder.demoPauseUntil = 0;
       state.liveModelViewer?.setStageOrigin?.(MODEL_SCALE_ZERO_MM);
-      setDemoMotion(false);
+      setDemoMotion(EMBED_MODE);
     }
     const demoStartOrder = Math.max(settings.ringBase, ...demo.pairs.map((pair) => Number(pair.order)));
     state.ringSequence = normalizedRingSequence({
