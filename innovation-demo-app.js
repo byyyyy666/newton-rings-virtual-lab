@@ -549,6 +549,7 @@
     liveModelViewer: null,
     liveModelLoadStarted: false,
     demoMotion: true,
+    demoPausedByUser: false,
     demoClockMs: performance.now(),
     encoderMonitor: {
       samples: [],
@@ -2818,6 +2819,7 @@
   function setDemoMotion(enabled, notify = false) {
     state.demoMotion = enabled;
     if (enabled) {
+      state.demoPausedByUser = false;
       state.encoder.demoPauseUntil = 0;
       const { min, max } = demoRawRange();
       if (state.encoder.lastDemoRaw >= max) state.encoder.demoDirection = -1;
@@ -5236,6 +5238,13 @@
           { silent: true }
         );
       }
+      if (
+        EMBED_MODE
+        && state.session.status === "active"
+        && !state.demoPausedByUser
+      ) {
+        setDemoMotion(true);
+      }
       return;
     }
     if (phase === "start") {
@@ -5362,7 +5371,9 @@
     $("studentChip").addEventListener("click", openSessionDialog);
     $("sessionSettingsBtn").addEventListener("click", openSessionDialog);
     $("liveDemoMotionBtn").addEventListener("click", () => {
-      setDemoMotion(!state.demoMotion, true);
+      const nextMotion = !state.demoMotion;
+      setDemoMotion(nextMotion, true);
+      state.demoPausedByUser = !nextMotion;
       addEvent(
         "reset",
         state.demoMotion ? "三维联动演示已继续" : "三维联动演示已暂停",
@@ -5411,6 +5422,13 @@
     });
     const endDrag = () => {
       dragging = false;
+      if (
+        EMBED_MODE
+        && state.session.status === "active"
+        && !state.demoPausedByUser
+      ) {
+        setDemoMotion(true);
+      }
     };
     encoderCanvas.addEventListener("pointerup", endDrag);
     encoderCanvas.addEventListener("pointercancel", endDrag);
