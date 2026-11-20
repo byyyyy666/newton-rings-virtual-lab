@@ -4523,6 +4523,7 @@
       if (EMBED_MODE) {
         settings.startPositionMm = startMm;
         state.esp.modelAnchorMm = startMm;
+        $("startPositionInput").value = startMm.toFixed(3);
       }
       state.encoder.lastDemoRaw = encoderRawForPosition(startMm);
       state.encoder.raw = state.encoder.lastDemoRaw;
