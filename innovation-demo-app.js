@@ -5180,7 +5180,7 @@
     if (state.liveModelViewer || state.liveModelLoadStarted) return;
     state.liveModelLoadStarted = true;
     try {
-        const module = await import("./model-viewer.js?v=meshopt-cdn-v8");
+        const module = await import("https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ff615c395bec1a01b4d498024f0bffd7bb31233a/model-viewer.js?v=meshopt-cdn-v10");
       state.liveModelViewer = await module.initDeviceViewer({
         canvas: $("liveDeviceCanvas"),
         autoRotateDefault: false,
@@ -5271,7 +5271,7 @@
     if (state.modelViewer || state.modelLoadStarted) return;
     state.modelLoadStarted = true;
     try {
-      const module = await import("./model-viewer.js?v=meshopt-cdn-v8");
+      const module = await import("https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ff615c395bec1a01b4d498024f0bffd7bb31233a/model-viewer.js?v=meshopt-cdn-v10");
       state.modelViewer = await module.initDeviceViewer({
         canvas: $("deviceCanvas"),
         onReady: (meta) => {
