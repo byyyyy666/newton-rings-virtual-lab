@@ -3981,7 +3981,7 @@
       const sequenceOptions = sequenceDetectionOptions();
       const detectOptions = {
         profileHalfWidth: 5,
-        processingLongEdge: 1280,
+        processingLongEdge: EMBED_MODE ? 720 : 1280,
         smoothingWindow: sequenceOptions.smoothingWindow,
         minimumDistance: 8,
         minimumDepth: sequenceOptions.minimumDepth,
@@ -4154,14 +4154,17 @@
 
   function startVisionInterval() {
     clearVisionInterval();
-    const seconds = numberOr(settings.visionInterval, 0);
+    const configuredSeconds = numberOr(settings.visionInterval, 0);
+    const seconds = EMBED_MODE
+      ? Math.max(0.6, configuredSeconds)
+      : configuredSeconds;
     if (seconds <= 0) return;
     state.visionTimer = window.setInterval(() => {
       if (demoVisualsPaused()) return;
       const frameAvailable = state.camera.active
         ? !state.camera.frameFrozen
         : state.camera.demoVideoReady && !state.camera.frameFrozen;
-      if (frameAvailable && state.view === "live") {
+      if (frameAvailable && state.view === "live" && state.overlayEnabled) {
         runVisionAnalysis({ automatic: true });
       }
     }, seconds * 1000);
