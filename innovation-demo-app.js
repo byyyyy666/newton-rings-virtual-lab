@@ -2478,7 +2478,15 @@
     const video = $("demoVideo");
     if (!video) return;
     state.camera.demoVideo = video;
+    const videoSources = [
+      "https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ccab9f7fd7dd8fd6017c5967ab40cdf571e5ca9c/assets-core/demo/newton-rings-demo.mp4",
+      "https://gcore.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ccab9f7fd7dd8fd6017c5967ab40cdf571e5ca9c/assets-core/demo/newton-rings-demo.mp4",
+      "./assets-core/demo/newton-rings-demo.mp4?v=20261121-demo-video-v26"
+    ];
+    let videoSourceIndex = 0;
+    let loadWatchdog = 0;
     const markReady = () => {
+      window.clearTimeout(loadWatchdog);
       state.camera.demoVideoReady = true;
       state.vision.lastAt = null;
       updateOpticsUi();
@@ -2488,16 +2496,30 @@
     video.addEventListener("playing", markReady);
     video.addEventListener("error", () => {
       state.camera.demoVideoReady = false;
-      console.warn("演示视频载入失败，继续使用内置模拟画面。", video.error);
       updateOpticsUi();
     });
-    const playPromise = video.play();
-    if (playPromise?.catch) {
-      playPromise.catch(() => {
-        state.camera.demoVideoReady = video.readyState >= 2;
-        updateOpticsUi();
-      });
-    }
+    const tryNextSource = () => {
+      window.clearTimeout(loadWatchdog);
+      videoSourceIndex += 1;
+      if (videoSourceIndex >= videoSources.length) {
+        console.warn("演示视频载入失败，继续使用内置模拟画面。", video.error);
+        return;
+      }
+      loadSource();
+    };
+    const loadSource = () => {
+      state.camera.demoVideoReady = false;
+      video.src = videoSources[videoSourceIndex];
+      video.load();
+      const playPromise = video.play();
+      playPromise?.catch?.(() => {});
+      loadWatchdog = window.setTimeout(() => {
+        if (video.readyState < 2) tryNextSource();
+      }, 12000);
+    };
+    video.addEventListener("loadeddata", () => window.clearTimeout(loadWatchdog));
+    video.addEventListener("error", tryNextSource);
+    loadSource();
   }
 
   function orientedCameraSource(video) {
