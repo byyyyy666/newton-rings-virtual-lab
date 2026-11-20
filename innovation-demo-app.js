@@ -13,10 +13,10 @@
   const MEASUREMENT_MAX_MM = 50;
   const DEMO_TRAVEL_MIN_MM = 11.68;
   const DEMO_TRAVEL_MAX_MM = 38.32;
+  const DEMO_TRAVEL_DURATION_MS = 24000;
   const RING_MAX_DETECTED = 80;
   const DEFAULT_CALIBRATION_RATIO = 0.48;
   const CALIBRATION_VERSION = 1;
-  const DEMO_ROTATION_RATE = 3;
   const DEMO_DATA_VERSION = 11;
   const CANVAS_THEME = Object.freeze({
     surface: "#f7f9fa",
@@ -2778,7 +2778,8 @@
     ) return;
     if (performance.now() < state.encoder.demoPauseUntil) return;
     const { min: demoMin, max: demoMax } = demoRawRange();
-    state.encoder.lastDemoRaw += deltaMs * DEMO_ROTATION_RATE * state.encoder.demoDirection;
+    const sweepStep = (demoMax - demoMin) / DEMO_TRAVEL_DURATION_MS * deltaMs;
+    state.encoder.lastDemoRaw += sweepStep * state.encoder.demoDirection;
     if (state.encoder.lastDemoRaw >= demoMax) {
       state.encoder.lastDemoRaw = demoMax;
       state.encoder.demoDirection = -1;
@@ -4491,7 +4492,11 @@
     const demo = buildDemoSession();
     state.session = demo;
     if (state.encoder.mode === "demo") {
-      const startMm = configuredStartPositionMm();
+      const startMm = EMBED_MODE ? DEMO_TRAVEL_MIN_MM : configuredStartPositionMm();
+      if (EMBED_MODE) {
+        settings.startPositionMm = startMm;
+        state.esp.modelAnchorMm = startMm;
+      }
       state.encoder.lastDemoRaw = encoderRawForPosition(startMm);
       state.encoder.raw = state.encoder.lastDemoRaw;
       state.encoder.angleDeg = normalizeAngle(
