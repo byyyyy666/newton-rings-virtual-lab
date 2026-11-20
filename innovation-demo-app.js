@@ -17,7 +17,7 @@
   const RING_MAX_DETECTED = 80;
   const DEFAULT_CALIBRATION_RATIO = 0.48;
   const CALIBRATION_VERSION = 1;
-  const DEMO_DATA_VERSION = 11;
+  const DEMO_DATA_VERSION = 12;
   const CANVAS_THEME = Object.freeze({
     surface: "#f7f9fa",
     surfaceMid: "#e3ebef",
@@ -49,7 +49,7 @@
     serialBaud: 115200
   };
 
-  const DEMO_ORDERS = Array.from({ length: 30 }, (_, index) => 30 - index);
+  const DEMO_ORDERS = Array.from({ length: 50 }, (_, index) => 50 - index);
   const EVENT_ICONS = {
     session: "play-circle",
     pause: "pause-circle",
@@ -195,7 +195,9 @@
   }
 
   function buildDemoSession() {
-    const started = new Date(Date.now() - 12 * 60 * 1000 - 47 * 1000);
+    const elapsedMs = 15 * 60 * 1000 + 12 * 1000;
+    const captureIntervalMs = 16000;
+    const started = new Date(Date.now() - elapsedMs);
     const wavelengthNm = 589.3;
     const referenceR = 10.01;
     const centerReading = 25.0;
@@ -221,7 +223,7 @@
       if (leftIssue) leftMm += leftIssue.shiftMm;
       if (rightIssue) rightMm += rightIssue.shiftMm;
       const measuredDiameter = Math.abs(rightMm - leftMm);
-      const capturedAt = new Date(started.getTime() + (index + 1) * 64000).toISOString();
+      const capturedAt = new Date(started.getTime() + (index + 1) * captureIntervalMs).toISOString();
       const confidence = 0.928 + Math.sin(index * 1.1) * 0.018;
       return {
         order,
@@ -257,20 +259,39 @@
         createdAt: capturedAt
       };
     });
-    const studentReadings = pairs.map((pair, index) => ({
-      order: pair.order,
-      leftMm: pair.left.positionMm + 0.0180 + Math.sin(index * 0.45) * 0.0007,
-      rightMm: pair.right.positionMm + 0.0180 + Math.cos(index * 0.38) * 0.0007
-    }));
+    const studentOrders = new Set([
+      46, 47, 48, 49, 50,
+      21, 22, 23, 24, 25
+    ]);
+    const studentReadings = pairs
+      .filter((pair) => studentOrders.has(pair.order))
+      .map((pair, index) => ({
+        order: pair.order,
+        leftMm: pair.left.positionMm + 0.0180 + Math.sin(index * 0.45) * 0.0007,
+        rightMm: pair.right.positionMm + 0.0180 + Math.cos(index * 0.38) * 0.0007
+      }));
     const studentByOrder = new Map(studentReadings.map((reading) => [reading.order, reading]));
     const misread24 = studentByOrder.get(24);
     if (misread24) misread24.leftMm += 0.1800;
-    const backlash12 = studentByOrder.get(12);
-    if (backlash12) backlash12.rightMm -= 0.1100;
-    const backlash18 = studentByOrder.get(18);
-    if (backlash18) backlash18.leftMm += 0.0850;
-    const missing8 = studentByOrder.get(8);
-    if (missing8) missing8.rightMm = null;
+    const backlash47 = studentByOrder.get(47);
+    if (backlash47) backlash47.rightMm -= 0.1100;
+    const backlash22 = studentByOrder.get(22);
+    if (backlash22) backlash22.leftMm += 0.0850;
+    let squaredDifferenceSum = 0;
+    let orderDifferenceSum = 0;
+    [46, 47, 48, 49, 50].forEach((highOrder) => {
+      const lowOrder = highOrder - 25;
+      const high = studentByOrder.get(highOrder);
+      const low = studentByOrder.get(lowOrder);
+      if (!high || !low) return;
+      const highDiameter = Math.abs(high.rightMm - high.leftMm);
+      const lowDiameter = Math.abs(low.rightMm - low.leftMm);
+      squaredDifferenceSum += highDiameter ** 2 - lowDiameter ** 2;
+      orderDifferenceSum += highOrder - lowOrder;
+    });
+    const studentResultR = orderDifferenceSum > 0
+      ? squaredDifferenceSum * 250 / (wavelengthNm * orderDifferenceSum)
+      : referenceR;
     const events = [
       {
         id: uid("event"),
@@ -297,22 +318,22 @@
         id: uid("event"),
         type: "encoder",
         title: "检测到编码器回转",
-        detail: "m=12 右侧测点前记录到鼓轮反向转动，读数可能包含螺纹空程",
-        at: new Date(started.getTime() + 13 * 64000).toISOString()
+        detail: "m=24 右侧测点前发生反向转动，已记录原始计数与角度",
+        at: new Date(started.getTime() + 27 * captureIntervalMs).toISOString()
       },
       {
         id: uid("event"),
         type: "encoder",
         title: "检测到编码器回转",
         detail: "m=18 左侧测点前出现方向切换，建议越过目标后单向靠近复测",
-        at: new Date(started.getTime() + 19 * 64000).toISOString()
+        at: new Date(started.getTime() + 33 * captureIntervalMs).toISOString()
       },
       {
         id: uid("event"),
         type: "encoder",
         title: "检测到编码器回转",
-        detail: "m=24 右侧测点前发生反向转动，已记录原始计数与角度",
-        at: new Date(started.getTime() + 25 * 64000).toISOString()
+        detail: "m=12 右侧测点前记录到鼓轮反向转动，读数可能包含螺纹空程",
+        at: new Date(started.getTime() + 39 * captureIntervalMs).toISOString()
       },
       ...pairs.map((pair, index) => ({
         id: uid("event"),
@@ -334,12 +355,12 @@
       referenceR,
       fitMode: "intercept",
       residualThreshold: 2.5,
-      studentResultR: 10.350,
+      studentResultR: Number(studentResultR.toFixed(3)),
       studentUncertaintyR: 0.1200,
       studentMethod: "逐差法",
       studentReadings,
       startedAt: started.toISOString(),
-      elapsedMs: 12 * 60 * 1000 + 47 * 1000,
+      elapsedMs,
       status: "active",
       demo: true,
       demoVersion: DEMO_DATA_VERSION,
@@ -350,13 +371,13 @@
         deadZonePx: 6,
         matchDistancePx: 100,
         phase: "left",
-        startOrder: 30,
+        startOrder: 50,
         currentOrder: 1,
-        rightCount: 30,
-        leftCount: 30,
+        rightCount: 50,
+        leftCount: 50,
         crossingDirection: -1,
         completed: true,
-        lastCrossingAt: new Date(started.getTime() + 31 * 64000).toISOString()
+        lastCrossingAt: new Date(started.getTime() + 52 * captureIntervalMs).toISOString()
       },
       captures: pairs.flatMap((pair) => [pair.left, pair.right]),
       events,
@@ -679,8 +700,17 @@
     const pairsByOrder = new Map(
       state.session.pairs.map((pair) => [Number(pair.order), pair])
     );
-    const orders = new Set(sequenceDisplayRows().map((row) => Number(row.order)));
-    state.session.pairs.forEach((pair) => orders.add(Number(pair.order)));
+    const enteredStudentOrders = state.session.studentReadings
+      .map((reading) => Number(reading.order))
+      .filter(Number.isFinite);
+    const curatedDemoOrders = state.session.demo && enteredStudentOrders.length
+      ? new Set(enteredStudentOrders)
+      : null;
+    const orders = curatedDemoOrders
+      || new Set(sequenceDisplayRows().map((row) => Number(row.order)));
+    if (!curatedDemoOrders) {
+      state.session.pairs.forEach((pair) => orders.add(Number(pair.order)));
+    }
     return Array.from(orders)
       .sort((left, right) => right - left)
       .map((order) => {
