@@ -566,6 +566,7 @@
       loading: false
     },
     lastTick: performance.now(),
+    lastOpticsDrawAt: 0,
     lastClockSecond: -1,
     modelViewer: null,
     modelLoadStarted: false,
@@ -2474,6 +2475,16 @@
     return true;
   }
 
+  function configureEmbeddedOpticCanvas() {
+    if (!EMBED_MODE) return;
+    const canvas = $("opticCanvas");
+    if (!canvas) return;
+    canvas.width = 640;
+    canvas.height = 360;
+    state.vision.center = { x: 320, y: 180 };
+    state.vision.syntheticCenter = { x: 320, y: 180 };
+  }
+
   function initializeDemoVideo() {
     const video = $("demoVideo");
     if (!video) return;
@@ -3185,7 +3196,10 @@
       if (!demoPaused) {
         state.demoClockMs = timestamp;
         updateDemoEncoder(deltaMs);
-        drawOptics(state.demoClockMs);
+        if (timestamp - state.lastOpticsDrawAt >= (EMBED_MODE ? 33 : 16)) {
+          state.lastOpticsDrawAt = timestamp;
+          drawOptics(state.demoClockMs);
+        }
       }
       if (previousRingOrder !== state.currentRingOrder) {
         renderCaptureSlots();
@@ -5238,7 +5252,7 @@
     if (state.liveModelViewer || state.liveModelLoadStarted) return;
     state.liveModelLoadStarted = true;
     try {
-        const module = await import("https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ff615c395bec1a01b4d498024f0bffd7bb31233a/model-viewer.js?v=meshopt-cdn-v10");
+        const module = await import("https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ab003a2dfec1ef0f0f110e4cb0921a6211186f4e/model-viewer.js?v=mobile-render-v29");
       state.liveModelViewer = await module.initDeviceViewer({
         canvas: $("liveDeviceCanvas"),
         autoRotateDefault: false,
@@ -5329,7 +5343,7 @@
     if (state.modelViewer || state.modelLoadStarted) return;
     state.modelLoadStarted = true;
     try {
-      const module = await import("https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ff615c395bec1a01b4d498024f0bffd7bb31233a/model-viewer.js?v=meshopt-cdn-v10");
+      const module = await import("https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ab003a2dfec1ef0f0f110e4cb0921a6211186f4e/model-viewer.js?v=mobile-render-v29");
       state.modelViewer = await module.initDeviceViewer({
         canvas: $("deviceCanvas"),
         onReady: (meta) => {
@@ -5694,6 +5708,7 @@
     bindDialogs();
     bindKeyboard();
     initializeEspAddress();
+    configureEmbeddedOpticCanvas();
     initializeDemoVideo();
     syncInputsFromSession();
     const demoMode = new URLSearchParams(window.location.search).get("demo");
