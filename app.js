@@ -779,7 +779,7 @@
     }
 
     try {
-      const module = await import("https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ff615c395bec1a01b4d498024f0bffd7bb31233a/operation-model-viewer.js?v=meshopt-cdn-v10");
+      const module = await import("https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@ab003a2dfec1ef0f0f110e4cb0921a6211186f4e/operation-model-viewer.js?v=mobile-render-v29");
       operationModelViewer = await module.initDeviceViewer({
         canvas: operationDeviceCanvas,
         autoRotateDefault: false,
