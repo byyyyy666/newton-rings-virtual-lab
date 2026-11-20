@@ -574,6 +574,7 @@
     liveModelLoadStarted: false,
     demoMotion: true,
     demoPausedByUser: false,
+    demoPlaybackStarted: false,
     demoClockMs: performance.now(),
     encoderMonitor: {
       samples: [],
@@ -2503,8 +2504,15 @@
       updateOpticsUi();
       drawOptics(performance.now());
     };
+    const markPlaying = () => {
+      state.demoPlaybackStarted = true;
+      state.lastTick = performance.now();
+      state.encoder.demoPauseUntil = 0;
+      syncDemoVisuals();
+    };
     video.addEventListener("loadeddata", markReady);
     video.addEventListener("playing", markReady);
+    video.addEventListener("playing", markPlaying);
     video.addEventListener("error", () => {
       state.camera.demoVideoReady = false;
       updateOpticsUi();
@@ -2519,6 +2527,7 @@
       loadSource();
     };
     const loadSource = () => {
+      state.demoPlaybackStarted = false;
       state.camera.demoVideoReady = false;
       video.src = videoSources[videoSourceIndex];
       video.load();
@@ -2835,6 +2844,7 @@
       state.encoder.mode !== "demo"
       || state.session.status === "paused"
       || !state.demoMotion
+      || !state.demoPlaybackStarted
     ) return;
     if (performance.now() < state.encoder.demoPauseUntil) return;
     const { min: demoMin, max: demoMax } = demoRawRange();
@@ -3191,7 +3201,8 @@
       const deltaMs = Math.min(100, timestamp - state.lastTick);
       state.lastTick = timestamp;
       const previousRingOrder = state.currentRingOrder;
-      const demoPaused = demoVisualsPaused();
+      const demoPaused = demoVisualsPaused()
+        || (state.encoder.mode === "demo" && !state.demoPlaybackStarted);
       state.liveModelViewer?.setAnimationPaused?.(demoPaused);
       if (!demoPaused) {
         state.demoClockMs = timestamp;
