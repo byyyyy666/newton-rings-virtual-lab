@@ -713,7 +713,21 @@ export async function initDeviceViewer({
     return autoRotate;
   }
 
-  const gltf = await loader.loadAsync("./assets-core/device.glb?v=meshopt-v1");
+  const modelSources = [
+    "https://cdn.jsdelivr.net/gh/byyyyy666/newton-rings-virtual-lab@b364ab976f484a1035df518293be7ca616a16f2d/assets-core/device.glb",
+    "./assets-core/device.glb?v=meshopt-v1"
+  ];
+  let gltf = null;
+  let modelError = null;
+  for (const source of modelSources) {
+    try {
+      gltf = await loader.loadAsync(source);
+      break;
+    } catch (error) {
+      modelError = error;
+    }
+  }
+  if (!gltf) throw modelError || new Error("三维模型加载失败");
   device = gltf.scene;
   normaliseModel(device);
   scene.add(device);

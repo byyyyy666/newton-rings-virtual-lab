@@ -5180,7 +5180,7 @@
     if (state.liveModelViewer || state.liveModelLoadStarted) return;
     state.liveModelLoadStarted = true;
     try {
-        const module = await import("./model-viewer.js?v=meshopt-v7");
+        const module = await import("./model-viewer.js?v=meshopt-cdn-v8");
       state.liveModelViewer = await module.initDeviceViewer({
         canvas: $("liveDeviceCanvas"),
         autoRotateDefault: false,
@@ -5271,7 +5271,7 @@
     if (state.modelViewer || state.modelLoadStarted) return;
     state.modelLoadStarted = true;
     try {
-      const module = await import("./model-viewer.js?v=meshopt-v7");
+      const module = await import("./model-viewer.js?v=meshopt-cdn-v8");
       state.modelViewer = await module.initDeviceViewer({
         canvas: $("deviceCanvas"),
         onReady: (meta) => {
