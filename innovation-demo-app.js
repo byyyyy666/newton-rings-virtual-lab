@@ -5180,7 +5180,7 @@
     if (state.liveModelViewer || state.liveModelLoadStarted) return;
     state.liveModelLoadStarted = true;
     try {
-        const module = await import("./model-viewer.js?v=reference-theme-v41");
+        const module = await import("./model-viewer.js?v=meshopt-v7");
       state.liveModelViewer = await module.initDeviceViewer({
         canvas: $("liveDeviceCanvas"),
         autoRotateDefault: false,
@@ -5271,7 +5271,7 @@
     if (state.modelViewer || state.modelLoadStarted) return;
     state.modelLoadStarted = true;
     try {
-      const module = await import("./model-viewer.js?v=reference-theme-v41");
+      const module = await import("./model-viewer.js?v=meshopt-v7");
       state.modelViewer = await module.initDeviceViewer({
         canvas: $("deviceCanvas"),
         onReady: (meta) => {
@@ -5661,7 +5661,11 @@
         renderProcessEncoderMonitor(true);
       }
     });
-    window.setTimeout(ensureLiveDeviceViewer, 80);
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(ensureLiveDeviceViewer, { timeout: 1600 });
+    } else {
+      window.setTimeout(ensureLiveDeviceViewer, 500);
+    }
     startVisionInterval();
     startTicker();
     requestAnimationFrame(animationLoop);

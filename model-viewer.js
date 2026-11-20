@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "./libs/OrbitControls.js";
 import { GLTFLoader } from "./libs/GLTFLoader.js";
+import { MeshoptDecoder } from "./libs/meshopt_decoder.module.js";
 
 export async function initDeviceViewer({
   canvas,
@@ -88,6 +89,7 @@ export async function initDeviceViewer({
   scene.add(grid);
 
   const loader = new GLTFLoader();
+  loader.setMeshoptDecoder(MeshoptDecoder);
   let device = null;
   let meshCount = 0;
   let triangleCount = 0;
@@ -711,7 +713,7 @@ export async function initDeviceViewer({
     return autoRotate;
   }
 
-  const gltf = await loader.loadAsync("./assets-core/device.glb?v=range50-v3");
+  const gltf = await loader.loadAsync("./assets-core/device.glb?v=meshopt-v1");
   device = gltf.scene;
   normaliseModel(device);
   scene.add(device);

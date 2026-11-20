@@ -779,7 +779,7 @@
     }
 
     try {
-      const module = await import("./operation-model-viewer.js?v=device-operation-v1");
+      const module = await import("./operation-model-viewer.js?v=meshopt-v7");
       operationModelViewer = await module.initDeviceViewer({
         canvas: operationDeviceCanvas,
         autoRotateDefault: false,
