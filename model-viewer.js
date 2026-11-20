@@ -16,17 +16,18 @@ export async function initDeviceViewer({
   gridMajorColor = 0x385247,
   gridMinorColor = 0x243a31
 }) {
+  const compactRendering = window.matchMedia("(max-width: 900px)").matches;
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true,
+    antialias: !compactRendering,
     alpha: false,
     powerPreference: "high-performance"
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(compactRendering ? 1 : Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.16;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = !compactRendering;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
@@ -760,8 +761,11 @@ export async function initDeviceViewer({
   resize();
 
   let frame = 0;
-  function animate() {
+  let lastRenderAt = 0;
+  function animate(timestamp = performance.now()) {
     frame = requestAnimationFrame(animate);
+    if (compactRendering && timestamp - lastRenderAt < 33) return;
+    lastRenderAt = timestamp;
     controls.update();
     const now = performance.now();
     const deltaMs = lastAnimationAt == null ? 0 : Math.min(100, now - lastAnimationAt);
