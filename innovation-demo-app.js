@@ -2451,9 +2451,6 @@
     const markReady = () => {
       state.camera.demoVideoReady = true;
       state.vision.lastAt = null;
-      if (EMBED_MODE && video.currentTime < 0.1) {
-        video.currentTime = 0.5;
-      }
       updateOpticsUi();
       drawOptics(performance.now());
     };
