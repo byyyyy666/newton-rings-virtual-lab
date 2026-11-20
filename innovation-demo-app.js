@@ -11,6 +11,8 @@
   const MODEL_SCALE_ZERO_MM = 26;
   const MEASUREMENT_MIN_MM = 0;
   const MEASUREMENT_MAX_MM = 50;
+  const DEMO_TRAVEL_MIN_MM = 11.68;
+  const DEMO_TRAVEL_MAX_MM = 38.32;
   const RING_MAX_DETECTED = 80;
   const DEFAULT_CALIBRATION_RATIO = 0.48;
   const CALIBRATION_VERSION = 1;
@@ -2760,8 +2762,8 @@
   }
 
   function demoRawRange() {
-    const zeroRaw = encoderRawForPosition(MEASUREMENT_MIN_MM);
-    const fullRaw = encoderRawForPosition(MEASUREMENT_MAX_MM);
+    const zeroRaw = encoderRawForPosition(DEMO_TRAVEL_MIN_MM);
+    const fullRaw = encoderRawForPosition(DEMO_TRAVEL_MAX_MM);
     return {
       min: Math.min(zeroRaw, fullRaw),
       max: Math.max(zeroRaw, fullRaw)
@@ -4578,7 +4580,7 @@
       ? `已同步：当前值设为 0 点，读数 = ${startMm.toFixed(3)} + 相对位移`
       : state.encoder.mode === "demo"
         ? state.demoMotion
-          ? `演示从 ${startMm.toFixed(3)} mm 开始，在 0–50 mm 内往返`
+          ? `演示从 ${startMm.toFixed(3)} mm 开始，在 ${DEMO_TRAVEL_MIN_MM.toFixed(3)}–${DEMO_TRAVEL_MAX_MM.toFixed(3)} mm 内往返`
           : `已定位到 ${startMm.toFixed(3)} mm；点击“继续演示”开始运动`
         : state.esp.status === "online" || state.esp.status === "waiting"
           ? `等待设定：连接后首帧设为 0 点`
