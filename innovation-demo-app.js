@@ -13,7 +13,7 @@
   const MEASUREMENT_MAX_MM = 50;
   const DEMO_TRAVEL_MIN_MM = 7.807;
   const DEMO_TRAVEL_MAX_MM = 42.194;
-  const DEMO_TRAVEL_DURATION_MS = 33000;
+  const DEMO_TRAVEL_DURATION_MS = 30000;
   const RING_MAX_DETECTED = 80;
   const DEFAULT_CALIBRATION_RATIO = 0.48;
   const CALIBRATION_VERSION = 1;
@@ -575,6 +575,7 @@
     demoMotion: true,
     demoPausedByUser: false,
     demoPlaybackStarted: false,
+    demoTravelDurationMs: null,
     demoClockMs: performance.now(),
     encoderMonitor: {
       samples: [],
@@ -2500,6 +2501,9 @@
     const markReady = () => {
       window.clearTimeout(loadWatchdog);
       state.camera.demoVideoReady = true;
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        state.demoTravelDurationMs = video.duration * 1000 / 2;
+      }
       state.vision.lastAt = null;
       updateOpticsUi();
       drawOptics(performance.now());
@@ -2848,16 +2852,17 @@
     ) return;
     if (performance.now() < state.encoder.demoPauseUntil) return;
     const { min: demoMin, max: demoMax } = demoRawRange();
-    const sweepStep = (demoMax - demoMin) / DEMO_TRAVEL_DURATION_MS * deltaMs;
+    const travelDurationMs = state.demoTravelDurationMs || DEMO_TRAVEL_DURATION_MS;
+    const sweepStep = (demoMax - demoMin) / travelDurationMs * deltaMs;
     state.encoder.lastDemoRaw += sweepStep * state.encoder.demoDirection;
     if (state.encoder.lastDemoRaw >= demoMax) {
       state.encoder.lastDemoRaw = demoMax;
       state.encoder.demoDirection = -1;
-      state.encoder.demoPauseUntil = performance.now() + 550;
+      state.encoder.demoPauseUntil = performance.now();
     } else if (state.encoder.lastDemoRaw <= demoMin) {
       state.encoder.lastDemoRaw = demoMin;
       state.encoder.demoDirection = 1;
-      state.encoder.demoPauseUntil = performance.now() + 550;
+      state.encoder.demoPauseUntil = performance.now();
     }
     state.encoder.raw = state.encoder.lastDemoRaw;
     state.encoder.countsPerRev = numberOr(settings.countsPerRev, 8192);
